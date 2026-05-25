@@ -2,8 +2,9 @@
 // entrypoint and the installable `cmd/astdst` binary so both expose the same two
 // modes:
 //
-//	astdst [flags]              extract the structural model (default)
+//	astdst [flags]              extract the DST model (default)
 //	astdst generate [flags]     generate a TLC-verified TLA+ spec, then extract
+//	astdst structure [flags]    extract a generic Go-structure model of any repo
 //
 // With no --config it uses the built-in preset for CharterTrace's
 // primary-server/sim. Point it at any sim-shaped codebase by passing a config
@@ -30,6 +31,10 @@ func Main(args []string) {
 		RunGenerate(args[1:])
 		return
 	}
+	if len(args) > 0 && args[0] == "structure" {
+		RunStructure(args[1:])
+		return
+	}
 	RunExtract(args)
 }
 
@@ -50,10 +55,46 @@ func RunExtract(args []string) {
 	if err := write(*out, *indent, model); err != nil {
 		fail("write: %v", err)
 	}
+	warnUnresolved(cfg, model)
 	fmt.Fprintf(os.Stderr,
 		"astdst: %d truths, %d invariants, %d faults, %d operations, %d edges\n",
 		model.Stats.Truths, model.Stats.Invariants, model.Stats.Faults,
 		model.Stats.Operations, model.Stats.Edges)
+}
+
+// warnUnresolved flags a configured catalogue name that matched nothing. Without
+// it, "this repo has no operations" and "the configured tableVar is wrong" both
+// render as an empty section — indistinguishable, which undercuts the tool's
+// honesty guarantee (a gap should be a real gap, not a silent misconfig). The
+// check is a heuristic (a configured name that produced zero results), stderr-
+// only and non-fatal, so it never blocks a legitimately empty extraction.
+func warnUnresolved(cfg extract.Config, m *extract.Model) {
+	warn := func(concept, name string) {
+		fmt.Fprintf(os.Stderr,
+			"astdst: warning: configured %s %q matched nothing — check the name or --root\n",
+			concept, name)
+	}
+	if cfg.Faults.StructSliceVar != "" || cfg.Faults.EnumType != "" {
+		if len(m.Faults) == 0 {
+			name := cfg.Faults.StructSliceVar
+			if name == "" {
+				name = cfg.Faults.EnumType
+			}
+			warn("fault source", name)
+		}
+	}
+	if cfg.Invariants.StructSliceVar != "" && len(m.Invariants) == 0 {
+		warn("invariants.structSliceVar", cfg.Invariants.StructSliceVar)
+	}
+	if cfg.Operations.TableVar != "" && len(m.Operations) == 0 {
+		warn("operations.tableVar", cfg.Operations.TableVar)
+	}
+	if cfg.State.TypeName != "" && m.State == nil {
+		warn("state.typeName", cfg.State.TypeName)
+	}
+	if cfg.TLA.SpecDir != "" && len(m.Specs) == 0 {
+		warn("tla.specDir", cfg.TLA.SpecDir)
+	}
 }
 
 // loadConfig resolves the config the same way for both subcommands.

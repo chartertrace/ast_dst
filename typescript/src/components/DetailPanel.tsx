@@ -126,13 +126,14 @@ function SpecBlock({ spec }: { spec: SpecView }) {
 function resolve(model: DstModel, nodeId: string): Detail | null {
   const kind = nodeKind(nodeId);
   const key = nodeId.slice(nodeId.indexOf(":") + 1);
+  const L = model.meta?.labels; // non-DST mode relabels the node kinds
 
   switch (kind) {
     case "op": {
       const op = model.operations.find((o) => String(o.index) === key);
       if (!op) return null;
       return {
-        kind: "operation",
+        kind: L ? L.operations.toLowerCase() : "operation",
         dotClass: "op",
         title: op.name,
         subtitle: `weight ${op.weight} · ${(op.share * 100).toFixed(1)}% of dispatch · injects ${op.faults.length} fault${op.faults.length === 1 ? "" : "s"}`,
@@ -143,7 +144,7 @@ function resolve(model: DstModel, nodeId: string): Detail | null {
     case "fault": {
       const f = model.faults.find((x) => x.id === key);
       if (!f) return null;
-      return { kind: "fault", dotClass: "fault", title: f.label, subtitle: f.id, doc: f.doc, loc: f.loc };
+      return { kind: L ? L.faults.toLowerCase() : "fault", dotClass: "fault", title: f.label, subtitle: f.id, doc: f.doc, loc: f.loc };
     }
     case "inv": {
       const inv = model.invariants.find((x) => x.id === key);
@@ -162,7 +163,8 @@ function resolve(model: DstModel, nodeId: string): Detail | null {
           tlcDepth: full?.tlcDepth,
         };
       }
-      return { kind: `${inv.truth} invariant`, dotClass: "inv", title: inv.label, subtitle: inv.id, doc: inv.doc, loc: inv.loc, spec };
+      const invKind = L ? `${inv.truth} · ${L.invariants.toLowerCase()}` : `${inv.truth} invariant`;
+      return { kind: invKind, dotClass: "inv", title: inv.label, subtitle: inv.id, doc: inv.doc, loc: inv.loc, spec };
     }
     case "truth": {
       const t = model.truths.find((x) => x.name === key);
@@ -171,7 +173,13 @@ function resolve(model: DstModel, nodeId: string): Detail | null {
         .filter((i) => i.truth === t.name)
         .map((i) => i.label)
         .join(", ");
-      return { kind: "truth", dotClass: "truth", title: t.name, subtitle: `${t.count} invariants`, doc: labels };
+      return {
+        kind: L ? L.truths.toLowerCase() : "truth",
+        dotClass: "truth",
+        title: t.name,
+        subtitle: `${t.count} ${L ? L.invariants.toLowerCase() : "invariants"}`,
+        doc: labels,
+      };
     }
     default:
       return null;

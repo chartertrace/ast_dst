@@ -26,7 +26,12 @@ func extractFaults(p *pkg, cfg FaultConfig) []Fault {
 			if id := enumToID[enum]; id != "" {
 				order = append(order, id)
 			} else {
+				// Enum-only codebase (no name map): the enum constant IS the id.
+				// Bind the identity so the loop below resolves enumDocs/enumLocs —
+				// without this the doc, location, and Enum field are silently
+				// dropped for the very enum the catalogue lookup just found.
 				order = append(order, enum)
+				idToEnum[enum] = enum
 			}
 		}
 	}

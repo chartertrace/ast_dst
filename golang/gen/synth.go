@@ -19,14 +19,15 @@ type Draft struct {
 // SynthReport summarises what the deterministic synthesiser could and could not
 // recover, so the result is honest about its own gaps.
 type SynthReport struct {
-	Variables     int `json:"variables"`     // state variables declared from the struct
-	Typed         int `json:"typed"`         // variables with a precise TypeOK clause
-	Operations    int `json:"operations"`    // actions emitted
-	Transitions   int `json:"transitions"`   // ops with a real (non-stub) transition
-	StubOps       int `json:"stubOps"`       // ops left as UNCHANGED (no modellable write)
-	ActiveInvs    int `json:"activeInvs"`    // invariant predicates active (resolve to declared vars)
-	ReferenceInvs int `json:"referenceInvs"` // recovered predicates carried as comments (foreign vocabulary)
-	StubInvs      int `json:"stubInvs"`      // invariants with no recoverable predicate
+	Variables        int `json:"variables"`        // state variables declared from the struct
+	Typed            int `json:"typed"`            // variables with a precise TypeOK clause
+	Operations       int `json:"operations"`       // actions emitted
+	Transitions      int `json:"transitions"`      // ops with a real (non-stub) transition
+	ValueTransitions int `json:"valueTransitions"` // ops with ≥1 deterministic value form (f' = …)
+	StubOps          int `json:"stubOps"`          // ops left as UNCHANGED (no modellable write)
+	ActiveInvs       int `json:"activeInvs"`       // invariant predicates active (resolve to declared vars)
+	ReferenceInvs    int `json:"referenceInvs"`    // recovered predicates carried as comments (foreign vocabulary)
+	StubInvs         int `json:"stubInvs"`         // invariants with no recoverable predicate
 }
 
 // maxNatDefault bounds every numeric variable to 0..MaxNat so the state space is
@@ -116,6 +117,19 @@ func Synthesize(m *extract.Model, moduleName string) (*Draft, *SynthReport, erro
 	}
 	w("")
 
+	// A value transition like `clock' = clock + 1` is unbounded on its own; this
+	// state constraint keeps the search finite (out-of-range successors are pruned,
+	// not invariant-checked) so numeric invariants are tested over 0..MaxNat.
+	if usesMaxNat {
+		w("StateBound ==")
+		for _, v := range vars {
+			if v.kind == kindNum {
+				w("    /\\ %s \\in 0..MaxNat", v.tlaName)
+			}
+		}
+		w("")
+	}
+
 	// ---- operations -----------------------------------------------------------
 	w(`\* Operations — %d weighted actions, transitions from extracted write sets.`, len(m.Operations))
 	opNames := make([]string, 0, len(m.Operations))
@@ -123,11 +137,14 @@ func Synthesize(m *extract.Model, moduleName string) (*Draft, *SynthReport, erro
 	for _, op := range m.Operations {
 		name := uniqueIdent(sanitizeIdent(op.Name), usedOps)
 		opNames = append(opNames, name)
-		action, real := opAction(name, op, vars, byField)
+		action, real, value := opAction(name, op, vars, byField)
 		if real {
 			rep.Transitions++
 		} else {
 			rep.StubOps++
+		}
+		if value {
+			rep.ValueTransitions++
 		}
 		faults := ""
 		if len(op.Faults) > 0 {
@@ -199,19 +216,29 @@ func Synthesize(m *extract.Model, moduleName string) (*Draft, *SynthReport, erro
 		"INVARIANT AllInvariants",
 	}
 	if usesMaxNat {
-		cfgLines = append(cfgLines, fmt.Sprintf("CONSTANT MaxNat = %d", maxNatDefault))
+		cfgLines = append(cfgLines,
+			fmt.Sprintf("CONSTANT MaxNat = %d", maxNatDefault),
+			"CONSTRAINT StateBound")
 	}
 	cfg := strings.Join(cfgLines, "\n") + "\n"
 
 	return &Draft{Module: moduleName, TLA: b.String(), CFG: cfg}, rep, nil
 }
 
-// opAction renders one operation as a TLA+ action from its write set, returning
-// the action text and whether it is a real (non-stub) transition. A written
-// numeric field becomes a bounded nondeterministic update, a bool ranges over
-// BOOLEAN, and a field of an unmodellable type is left UNCHANGED with a flagged
-// comment (we can't bound its domain, so we won't fake a change).
-func opAction(name string, op extract.Operation, vars []synthVar, byField map[string]synthVar) (text string, real bool) {
+// opAction renders one operation as a TLA+ action from its extracted effects. A
+// recovered form yields a *value* transition (`f' = f + 1`, `f' = TRUE`,
+// `f' = "done"`); a written field with no recovered form falls back to a bounded
+// nondeterministic update (`f' \in 0..MaxNat`); a field of an unmodellable type
+// (map/slice/opaque, or a string with no literal value) is left UNCHANGED with a
+// flagged comment. It returns the text, whether it is a real (non-stub)
+// transition, and whether it has at least one value form (the basis for the
+// "behavioral" verification claim).
+func opAction(name string, op extract.Operation, vars []synthVar, byField map[string]synthVar) (text string, real, value bool) {
+	effByField := map[string]extract.FieldEffect{}
+	for _, e := range op.Effects {
+		effByField[e.Field] = e
+	}
+
 	changed := map[string]bool{}
 	var conj []string
 	var unmodelled []string
@@ -220,15 +247,15 @@ func opAction(name string, op extract.Operation, vars []synthVar, byField map[st
 		if !ok {
 			continue
 		}
-		switch v.kind {
-		case kindNum:
-			conj = append(conj, fmt.Sprintf("%s' \\in 0..MaxNat", v.tlaName))
-			changed[v.tlaName] = true
-		case kindBool:
-			conj = append(conj, fmt.Sprintf("%s' \\in BOOLEAN", v.tlaName))
-			changed[v.tlaName] = true
-		default:
+		clause, isValue, modelled := fieldClause(v, effByField[f])
+		if !modelled {
 			unmodelled = append(unmodelled, v.tlaName)
+			continue
+		}
+		conj = append(conj, clause)
+		changed[v.tlaName] = true
+		if isValue {
+			value = true
 		}
 	}
 
@@ -242,7 +269,7 @@ func opAction(name string, op extract.Operation, vars []synthVar, byField map[st
 		if len(unmodelled) == 0 {
 			sb.WriteString("  \\* TODO: handler writes no modelled state")
 		}
-		return sb.String(), false
+		return sb.String(), false, false
 	}
 	wl(name + " ==")
 	for _, c := range conj {
@@ -256,11 +283,44 @@ func opAction(name string, op extract.Operation, vars []synthVar, byField map[st
 	}
 	if len(rest) > 0 {
 		sb.WriteString(fmt.Sprintf("    /\\ UNCHANGED << %s >>", strings.Join(rest, ", ")))
-	} else {
-		// every variable changes; trim the trailing newline from the last conj line
-		return strings.TrimRight(sb.String(), "\n"), true
+		return sb.String(), true, value
 	}
-	return sb.String(), true
+	return strings.TrimRight(sb.String(), "\n"), true, value
+}
+
+// fieldClause renders the primed-variable conjunct for one written field given
+// its recovered effect. It returns the clause, whether it is a deterministic
+// value form, and whether the field is modellable at all.
+func fieldClause(v synthVar, eff extract.FieldEffect) (clause string, value, modelled bool) {
+	switch v.kind {
+	case kindNum:
+		switch eff.Op {
+		case "inc":
+			return fmt.Sprintf("%s' = %s + 1", v.tlaName, v.tlaName), true, true
+		case "dec":
+			return fmt.Sprintf("%s' = %s - 1", v.tlaName, v.tlaName), true, true
+		case "add":
+			return fmt.Sprintf("%s' = %s + %s", v.tlaName, v.tlaName, eff.Value), true, true
+		case "sub":
+			return fmt.Sprintf("%s' = %s - %s", v.tlaName, v.tlaName, eff.Value), true, true
+		case "setNum":
+			return fmt.Sprintf("%s' = %s", v.tlaName, eff.Value), true, true
+		default:
+			return fmt.Sprintf("%s' \\in 0..MaxNat", v.tlaName), false, true
+		}
+	case kindBool:
+		if eff.Op == "setBool" {
+			return fmt.Sprintf("%s' = %s", v.tlaName, eff.Value), true, true
+		}
+		return fmt.Sprintf("%s' \\in BOOLEAN", v.tlaName), false, true
+	default:
+		// A string field set to a literal is modellable as a value form; anything
+		// else (map/slice/opaque, or a string with no literal) is left UNCHANGED.
+		if v.typeOK == "STRING" && eff.Op == "setStr" {
+			return fmt.Sprintf("%s' = %s", v.tlaName, eff.Value), true, true
+		}
+		return "", false, false
+	}
 }
 
 // synthVar is one TLA+ variable derived from a Go state field.

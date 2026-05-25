@@ -1,6 +1,7 @@
 package extract
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,6 +14,10 @@ import (
 // names that repo's catalogue vars, enum type, checker-method pattern, and —
 // for "any tracing setup" — the instrumentation call that records a fault.
 type Config struct {
+	// Description is an optional human note carried by a preset (e.g. what
+	// codebase or mapping it describes). Ignored by the extractor; it exists so
+	// presets can self-document now that unknown keys are rejected.
+	Description string `json:"description,omitempty"`
 	// Root is the codebase directory to parse (overridden by --root).
 	Root string `json:"root,omitempty"`
 	// Packages lists sub-directories of Root to parse. Empty = recurse into
@@ -151,8 +156,13 @@ func LoadConfig(path string) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-	// Decode onto the default so omitted fields fall back to it.
-	if err := json.Unmarshal(data, &cfg); err != nil {
+	// Decode onto the default so omitted fields fall back to it. Reject unknown
+	// keys: a mistyped key ("enumtype" for "enumType") would otherwise be silently
+	// dropped, leaving the sim default in place and producing a confusing empty
+	// section rather than an error.
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(&cfg); err != nil {
 		return Config{}, fmt.Errorf("parse config %s: %w", path, err)
 	}
 	return cfg, nil

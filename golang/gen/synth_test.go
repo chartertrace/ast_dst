@@ -25,7 +25,9 @@ func sampleModel() *extract.Model {
 			},
 		},
 		Operations: []extract.Operation{
-			{Index: 0, Name: "Tick", Weight: 1, Share: 1, Faults: []string{}, Writes: []string{"Clock"}},
+			{Index: 0, Name: "Tick", Weight: 1, Share: 1, Faults: []string{},
+				Writes:  []string{"Clock"},
+				Effects: []extract.FieldEffect{{Field: "Clock", Op: "inc"}}},
 		},
 		Invariants: []extract.Invariant{
 			{ID: "A-1", Label: "ClockNonNeg", Spec: &extract.SpecRef{Name: "ClockNonNeg"}, SpecStatus: "validated"},
@@ -56,7 +58,8 @@ func TestSynthesizeStructure(t *testing.T) {
 		"Clock = 0",
 		"active = FALSE",
 		"Balances = <<>>",
-		"Clock' \\in 0..MaxNat",            // Tick writes Clock -> real transition
+		"StateBound ==",                    // numeric bound for finiteness
+		"Clock' = Clock + 1",               // Tick increments Clock -> value transition
 		"UNCHANGED << active, Balances >>", // the rest held
 		"Spec == Init /\\ [][Next]_vars",
 		"ClockNonNeg ==",      // active invariant
@@ -75,8 +78,8 @@ func TestSynthesizeStructure(t *testing.T) {
 	if rep.Variables != 3 || rep.Typed != 2 {
 		t.Errorf("report vars/typed = %d/%d, want 3/2", rep.Variables, rep.Typed)
 	}
-	if rep.Transitions != 1 || rep.StubOps != 0 {
-		t.Errorf("report transitions/stubOps = %d/%d, want 1/0", rep.Transitions, rep.StubOps)
+	if rep.Transitions != 1 || rep.ValueTransitions != 1 || rep.StubOps != 0 {
+		t.Errorf("report transitions/value/stub = %d/%d/%d, want 1/1/0", rep.Transitions, rep.ValueTransitions, rep.StubOps)
 	}
 	if rep.ActiveInvs != 1 || rep.ReferenceInvs != 1 || rep.StubInvs != 1 {
 		t.Errorf("report invs active/ref/stub = %d/%d/%d, want 1/1/1", rep.ActiveInvs, rep.ReferenceInvs, rep.StubInvs)
@@ -150,9 +153,36 @@ func TestGenerateVerifiesSynthesized(t *testing.T) {
 	if !res.Verified {
 		t.Fatalf("synthesised spec should verify, got TLC %+v", res.TLC)
 	}
-	// Tick writes Clock (bounded 0..MaxNat), so the state space is more than the
-	// initial state — a real multi-state model-check, not just Init.
+	// Tick increments Clock (0→1→2 under StateBound), so the search is multi-state
+	// and ClockNonNeg is checked against a real value transition — behavioral.
 	if res.TLC.States <= 1 {
 		t.Errorf("expected a multi-state search from the Clock transition, got %d states", res.TLC.States)
+	}
+}
+
+func TestOpActionValueForms(t *testing.T) {
+	t.Parallel()
+	num := synthVar{tlaName: "Clock", field: "Clock", kind: kindNum}
+	b := synthVar{tlaName: "flag", field: "flag", kind: kindBool}
+	str := synthVar{tlaName: "status", field: "status", kind: kindOther, typeOK: "STRING"}
+	cases := []struct {
+		eff    extract.FieldEffect
+		v      synthVar
+		clause string
+		value  bool
+	}{
+		{extract.FieldEffect{Op: "inc"}, num, "Clock' = Clock + 1", true},
+		{extract.FieldEffect{Op: "add", Value: "5"}, num, "Clock' = Clock + 5", true},
+		{extract.FieldEffect{Op: "setNum", Value: "3"}, num, "Clock' = 3", true},
+		{extract.FieldEffect{Op: ""}, num, "Clock' \\in 0..MaxNat", false}, // no form -> bound
+		{extract.FieldEffect{Op: "setBool", Value: "TRUE"}, b, "flag' = TRUE", true},
+		{extract.FieldEffect{Op: ""}, b, "flag' \\in BOOLEAN", false},
+		{extract.FieldEffect{Op: "setStr", Value: `"done"`}, str, `status' = "done"`, true},
+	}
+	for _, c := range cases {
+		clause, value, modelled := fieldClause(c.v, c.eff)
+		if !modelled || clause != c.clause || value != c.value {
+			t.Errorf("fieldClause(%s, %+v) = (%q,%v,%v), want (%q,%v,true)", c.v.tlaName, c.eff, clause, value, modelled, c.clause, c.value)
+		}
 	}
 }

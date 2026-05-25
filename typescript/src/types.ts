@@ -12,6 +12,22 @@ export interface Truth {
   count: number;
 }
 
+// Display labels for an alternate extraction mode. Absent for the default DST
+// model (the viewer then uses its built-in DST labels); set by `structure` mode
+// so the same viewer reads "Functions / Types / Packages".
+export interface Labels {
+  operations: string; // column 1 head
+  faults: string; // column 2 head
+  invariants: string; // column 3 items
+  truths: string; // column 3 groups
+}
+
+export interface Meta {
+  mode: string; // "structure"
+  title: string; // header title
+  labels: Labels;
+}
+
 // Spec-coverage classification of a runtime invariant checker against the
 // formal TLA+ spec. Mirrors the Go SpecStatus constants.
 export type SpecStatus = "validated" | "unchecked-spec" | "unspecified";
@@ -134,6 +150,8 @@ export interface DstModel {
   specs?: SpecInvariant[];
   edges: Edge[];
   stats: Stats;
+  // Present only in non-DST modes (e.g. `structure`); drives the viewer's labels.
+  meta?: Meta;
 }
 
 // Node id helpers — the viewer keys selection and edges by these strings, which

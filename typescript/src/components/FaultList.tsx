@@ -5,6 +5,7 @@ import { rowClass } from "./util";
 interface Props {
   faults: Fault[];
   opsByFaultId: Map<string, Operation[]>;
+  label: string;
   selected: string | null;
   highlight: Set<string>;
   onSelect: (nodeId: string) => void;
@@ -14,14 +15,14 @@ interface Props {
  * Middle column: the fault catalogue. Each fault shows how many operations
  * inject it — a fault no op injects is dead weight, and reads as "0 ops".
  */
-export function FaultList({ faults, opsByFaultId, selected, highlight, onSelect }: Props) {
+export function FaultList({ faults, opsByFaultId, label, selected, highlight, onSelect }: Props) {
   const dimming = highlight.size > 0;
 
   return (
     <section className="dstast-col">
       <div className="dstast-col-head">
         <span className="dstast-dot fault" />
-        Faults
+        {label}
         <span className="dstast-count">{faults.length}</span>
       </div>
       <div className="dstast-col-body">

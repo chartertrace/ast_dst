@@ -6,6 +6,8 @@ import { genBadge, rowClass, specBadge } from "./util";
 interface Props {
   truths: Truth[];
   invariants: Invariant[];
+  label: string;
+  groupLabel: string;
   selected: string | null;
   highlight: Set<string>;
   onSelect: (nodeId: string) => void;
@@ -16,7 +18,7 @@ interface Props {
  * collapsible. Selecting a Truth highlights its whole group; selecting an
  * invariant drills into one property (doc + source line in the detail panel).
  */
-export function InvariantTree({ truths, invariants, selected, highlight, onSelect }: Props) {
+export function InvariantTree({ truths, invariants, label, groupLabel, selected, highlight, onSelect }: Props) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const dimming = highlight.size > 0;
 
@@ -37,9 +39,9 @@ export function InvariantTree({ truths, invariants, selected, highlight, onSelec
     <section className="dstast-col">
       <div className="dstast-col-head">
         <span className="dstast-dot inv" />
-        Invariants
+        {label}
         <span className="dstast-count">
-          {invariants.length} across {truths.length} truths
+          {invariants.length} across {truths.length} {groupLabel}
         </span>
       </div>
       <div className="dstast-col-body">

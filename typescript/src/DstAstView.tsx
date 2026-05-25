@@ -30,11 +30,15 @@ export function DstAstView({ model, className }: DstAstViewProps) {
   const onSelect = (nodeId: string) =>
     setSelected((cur) => (cur === nodeId ? null : nodeId));
 
+  // Display labels: the DST defaults, or the model's own (e.g. `structure` mode).
+  const L = model.meta?.labels;
+  const title = model.meta?.title ?? "DST · static structure";
+
   return (
     <div className={className ? `dstast ${className}` : "dstast"}>
       <header className="dstast-header">
         <div>
-          <div className="dstast-title">DST · static structure</div>
+          <div className="dstast-title">{title}</div>
           <div className="dstast-sub">
             parsed from <code>{model.source.simPath}</code> · {model.source.filesRead} files ·{" "}
             {new Date(model.generatedAt).toLocaleString()}
@@ -43,19 +47,19 @@ export function DstAstView({ model, className }: DstAstViewProps) {
         <div className="dstast-stats">
           <span className="dstast-stat">
             <b>{model.stats.operations}</b>
-            <span>ops</span>
+            <span>{L ? L.operations : "ops"}</span>
           </span>
           <span className="dstast-stat">
             <b>{model.stats.faults}</b>
-            <span>faults</span>
+            <span>{L ? L.faults : "faults"}</span>
           </span>
           <span className="dstast-stat">
             <b>{model.stats.invariants}</b>
-            <span>invariants</span>
+            <span>{L ? L.invariants : "invariants"}</span>
           </span>
           <span className="dstast-stat">
             <b>{model.stats.truths}</b>
-            <span>truths</span>
+            <span>{L ? L.truths : "truths"}</span>
           </span>
           <span className="dstast-stat">
             <b>{model.stats.edges}</b>
@@ -79,6 +83,7 @@ export function DstAstView({ model, className }: DstAstViewProps) {
         <OperationList
           operations={model.operations}
           faultByEnum={graph.faultByEnum}
+          label={L?.operations ?? "Operations"}
           selected={selected}
           highlight={highlight}
           onSelect={onSelect}
@@ -86,6 +91,7 @@ export function DstAstView({ model, className }: DstAstViewProps) {
         <FaultList
           faults={model.faults}
           opsByFaultId={graph.opsByFaultId}
+          label={L?.faults ?? "Faults"}
           selected={selected}
           highlight={highlight}
           onSelect={onSelect}
@@ -93,6 +99,8 @@ export function DstAstView({ model, className }: DstAstViewProps) {
         <InvariantTree
           truths={model.truths}
           invariants={model.invariants}
+          label={L?.invariants ?? "Invariants"}
+          groupLabel={L?.truths ?? "truths"}
           selected={selected}
           highlight={highlight}
           onSelect={onSelect}

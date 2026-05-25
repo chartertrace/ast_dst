@@ -5,6 +5,7 @@ import { rowClass } from "./util";
 interface Props {
   operations: Operation[];
   faultByEnum: Map<string, Fault>;
+  label: string;
   selected: string | null;
   highlight: Set<string>;
   onSelect: (nodeId: string) => void;
@@ -15,7 +16,7 @@ interface Props {
  * weight bar is scaled to the heaviest op so relative dispatch frequency reads
  * at a glance; fault chips are the faults the handler body actually injects.
  */
-export function OperationList({ operations, faultByEnum, selected, highlight, onSelect }: Props) {
+export function OperationList({ operations, faultByEnum, label, selected, highlight, onSelect }: Props) {
   const maxWeight = operations.reduce((m, o) => Math.max(m, o.weight), 0) || 1;
   const dimming = highlight.size > 0;
 
@@ -23,7 +24,7 @@ export function OperationList({ operations, faultByEnum, selected, highlight, on
     <section className="dstast-col">
       <div className="dstast-col-head">
         <span className="dstast-dot op" />
-        Operations
+        {label}
         <span className="dstast-count">{operations.length}</span>
       </div>
       <div className="dstast-col-body">

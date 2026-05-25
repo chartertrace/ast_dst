@@ -34,6 +34,27 @@ type Model struct {
 	Specs []SpecInvariant `json:"specs,omitempty"`
 	Edges []Edge          `json:"edges"`
 	Stats Stats           `json:"stats"`
+	// Meta carries the display labels for an alternate extraction mode. Nil for
+	// the default DST model (the viewer then uses its built-in DST labels); set
+	// by the generic `structure` mode so the same viewer reads "Functions /
+	// Types / Packages" instead of "Operations / Faults / Invariants".
+	Meta *Meta `json:"meta,omitempty"`
+}
+
+// Meta tells the viewer how to label a model whose buckets don't carry their DST
+// meaning. The node/edge shape is identical; only the words change.
+type Meta struct {
+	Mode   string `json:"mode"`  // "structure" (DST models omit Meta entirely)
+	Title  string `json:"title"` // header title, e.g. "Go structure"
+	Labels Labels `json:"labels"`
+}
+
+// Labels names the four node buckets for the current mode.
+type Labels struct {
+	Operations string `json:"operations"` // column 1
+	Faults     string `json:"faults"`     // column 2
+	Invariants string `json:"invariants"` // column 3 items
+	Truths     string `json:"truths"`     // column 3 groups
 }
 
 // Source records where the model came from, so a stale artifact is obvious.
@@ -95,10 +116,14 @@ type SpecInvariant struct {
 	// Provenance: set when this spec was machine-generated (see package gen) rather
 	// than hand-written. Generated reports authorship; Verified reports that TLC
 	// model-checked the spec clean; TLCStates/TLCDepth are the search it covered.
-	Generated bool `json:"generated,omitempty"`
-	Verified  bool `json:"verified,omitempty"`
-	TLCStates int  `json:"tlcStates,omitempty"`
-	TLCDepth  int  `json:"tlcDepth,omitempty"`
+	// Behavioral distinguishes a meaningful check (an active invariant verified
+	// against ≥1 real value transition) from a merely well-formed one (TLC passed,
+	// but the transitions carry no value semantics, so the ✓ proves little).
+	Generated  bool `json:"generated,omitempty"`
+	Verified   bool `json:"verified,omitempty"`
+	Behavioral bool `json:"behavioral,omitempty"`
+	TLCStates  int  `json:"tlcStates,omitempty"`
+	TLCDepth   int  `json:"tlcDepth,omitempty"`
 }
 
 // StateModel is the mutable state the operations act on, the basis for the TLA+
@@ -129,8 +154,9 @@ type SpecRef struct {
 	Loc      *Loc   `json:"loc,omitempty"`
 	// Provenance mirrored from the SpecInvariant so the viewer can badge an
 	// invariant as machine-generated / TLC-verified without cross-indexing Specs.
-	Generated bool `json:"generated,omitempty"`
-	Verified  bool `json:"verified,omitempty"`
+	Generated  bool `json:"generated,omitempty"`
+	Verified   bool `json:"verified,omitempty"`
+	Behavioral bool `json:"behavioral,omitempty"`
 }
 
 // Fault is one injectable failure mode. Enum is the Go constant name; ID is the
@@ -153,13 +179,28 @@ type Operation struct {
 	Share   float64  `json:"share"` // weight / total, 0..1
 	Note    string   `json:"note,omitempty"`
 	Faults  []string `json:"faults"` // fault enum names recorded in the body
-	// Writes lists the state-struct field names this handler assigns to (direct
-	// field writes, map/index writes, ++/--). The TLA+ generator turns these into
-	// the operation's transition; empty when no state field is written (or state
-	// is behind an interface, where field writes aren't visible). Best-effort and
-	// syntactic — it reports which fields change, not how.
+	// Writes lists the state-struct field names this handler assigns to. The TLA+
+	// generator turns these into the operation's transition; empty when no state
+	// field is written (or state is behind an interface). Best-effort, syntactic.
 	Writes []string `json:"writes,omitempty"`
-	Loc    *Loc     `json:"loc,omitempty"`
+	// Effects refines Writes with *how* each field changes when it is recoverable
+	// from a simple statement form (++/--, += literal, = literal). The generator
+	// uses these to emit value transitions (`f' = f + 1`) instead of a
+	// nondeterministic bound; a field with no recoverable form is absent here.
+	Effects []FieldEffect `json:"effects,omitempty"`
+	Loc     *Loc          `json:"loc,omitempty"`
+}
+
+// FieldEffect is the recovered shape of a write to one state field, when it
+// matches a simple deterministic form. Op names the form; Value is the rendered
+// literal operand for the forms that take one.
+type FieldEffect struct {
+	Field string `json:"field"`
+	// Op ∈ {inc, dec, add, sub, setNum, setBool, setStr}. A field written in
+	// several conflicting ways within one handler is omitted (the generator falls
+	// back to a nondeterministic bound), so every FieldEffect here is unambiguous.
+	Op    string `json:"op"`
+	Value string `json:"value,omitempty"` // literal operand: "1", "TRUE", "\"done\""
 }
 
 // Edge kinds.

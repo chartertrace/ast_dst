@@ -22,7 +22,7 @@
     "test": "vitest run",
     "dev": "vite demo",
     "build:viewer": "vite build",
-    "gen:tla": "tsx --tsconfig tsconfig.gen.json src/gen/cli-tla.ts",
+    "gen:trace": "tsx --tsconfig tsconfig.gen.json src/gen/cli-trace.ts",
     "gen:docs": "npm run build:viewer && tsx --tsconfig tsconfig.gen.json src/gen/cli-docs.tsx",
     "gen:reconcile": "tsx --tsconfig tsconfig.gen.json src/gen/cli-reconcile.ts"
   },

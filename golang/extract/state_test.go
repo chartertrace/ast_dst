@@ -79,6 +79,21 @@ func TestExtractOperationWriteSets(t *testing.T) {
 			t.Errorf("op %s writes = %v, want %v", op.Name, op.Writes, w)
 		}
 	}
+
+	// Tick is `w.Clock++` — a recoverable value form; the map writes are indexed,
+	// so their form is not recovered (Op stays empty, generator falls back).
+	for _, op := range m.Operations {
+		switch op.Name {
+		case "Tick":
+			if len(op.Effects) != 1 || op.Effects[0].Field != "Clock" || op.Effects[0].Op != "inc" {
+				t.Errorf("Tick effects = %+v, want one {Clock inc}", op.Effects)
+			}
+		case "Transfer": // w.Balances["d"] += 1 — indexed write, form not recovered
+			if len(op.Effects) != 1 || op.Effects[0].Field != "Balances" || op.Effects[0].Op != "" {
+				t.Errorf("Transfer effects = %+v, want one {Balances <none>}", op.Effects)
+			}
+		}
+	}
 }
 
 func TestExtractStateAbsentTypeIsNil(t *testing.T) {

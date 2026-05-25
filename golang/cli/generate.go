@@ -83,7 +83,10 @@ func RunGenerate(args []string) {
 	if res.TLC != nil {
 		states, depth = res.TLC.States, res.TLC.Depth
 	}
-	extract.MarkGenerated(out, res.Verified, states, depth)
+	// Behavioral = TLC checked a real value transition against an active invariant,
+	// so the ✓ means more than "well-formed".
+	behavioral := res.Verified && res.Report.ActiveInvs > 0 && res.Report.ValueTransitions > 0
+	extract.MarkGenerated(out, res.Verified, behavioral, states, depth)
 
 	if err := write(*outModel, *indent, out); err != nil {
 		fail("write model: %v", err)
@@ -106,13 +109,18 @@ func writeSpec(dir string, d *gen.Draft) error {
 func reportVerification(res *gen.GenResult, dir string) {
 	r := res.Report
 	fmt.Fprintf(os.Stderr,
-		"astdst: synthesised %d vars (%d typed), %d ops (%d transitions / %d stub), invariants: %d active / %d reference / %d stub\n",
-		r.Variables, r.Typed, r.Operations, r.Transitions, r.StubOps, r.ActiveInvs, r.ReferenceInvs, r.StubInvs)
+		"astdst: synthesised %d vars (%d typed), %d ops (%d transitions, %d with value forms / %d stub), invariants: %d active / %d reference / %d stub\n",
+		r.Variables, r.Typed, r.Operations, r.Transitions, r.ValueTransitions, r.StubOps, r.ActiveInvs, r.ReferenceInvs, r.StubInvs)
+	behavioral := res.Verified && r.ActiveInvs > 0 && r.ValueTransitions > 0
 	switch {
+	case res.Verified && behavioral:
+		fmt.Fprintf(os.Stderr,
+			"astdst: ✓ VERIFIED by TLC (behavioral: %d active invariant(s) checked against value transitions over %d states) → %s\n",
+			r.ActiveInvs+1, res.TLC.States, dir)
 	case res.Verified:
 		fmt.Fprintf(os.Stderr,
-			"astdst: ✓ VERIFIED by TLC (well-formed; initial state satisfies TypeOK + %d active invariant(s)) → %s\n",
-			res.Report.ActiveInvs+1, dir)
+			"astdst: ✓ verified WELL-FORMED by TLC (parses + holds over the modelled states, but transitions carry no value semantics — a weak claim) → %s\n",
+			dir)
 	case res.SANY != nil && !res.SANY.OK:
 		fmt.Fprintf(os.Stderr, "astdst: ✗ UNVERIFIED — spec failed to parse (SANY) → %s\n", dir)
 	case res.TLC != nil && res.TLC.Violated != "":

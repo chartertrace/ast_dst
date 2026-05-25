@@ -1,0 +1,2753 @@
+{
+  "generatedAt": "2026-05-25T22:48:13Z",
+  "source": {
+    "simPath": ".",
+    "filesRead": 20,
+    "toolModule": "astdst"
+  },
+  "truths": [
+    {
+      "name": "cli",
+      "count": 1
+    },
+    {
+      "name": "extract",
+      "count": 9
+    },
+    {
+      "name": "gen",
+      "count": 14
+    }
+  ],
+  "invariants": [
+    {
+      "id": "cli.defaultRoot",
+      "label": "defaultRoot",
+      "truth": "cli",
+      "doc": "defaultRoot is used when neither --root nor a config supplies one.",
+      "loc": {
+        "file": "cli/extract.go",
+        "line": 25
+      }
+    },
+    {
+      "id": "extract.EdgeMentionsInvariant",
+      "label": "EdgeMentionsInvariant",
+      "truth": "extract",
+      "doc": "Edge kinds.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 209
+      }
+    },
+    {
+      "id": "extract.EdgeOpInjectsFault",
+      "label": "EdgeOpInjectsFault",
+      "truth": "extract",
+      "doc": "Edge kinds.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 208
+      }
+    },
+    {
+      "id": "extract.EdgeTruthHasInvariant",
+      "label": "EdgeTruthHasInvariant",
+      "truth": "extract",
+      "doc": "Edge kinds.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 207
+      }
+    },
+    {
+      "id": "extract.EdgeValidates",
+      "label": "EdgeValidates",
+      "truth": "extract",
+      "doc": "Edge kinds.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 210
+      }
+    },
+    {
+      "id": "extract.SpecUnchecked",
+      "label": "SpecUnchecked",
+      "truth": "extract",
+      "doc": "SpecUnchecked: a TLA+ invariant exists but the .cfg never model-checks it.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 100
+      }
+    },
+    {
+      "id": "extract.SpecUnspecified",
+      "label": "SpecUnspecified",
+      "truth": "extract",
+      "doc": "SpecUnspecified: a Go checker with no formal TLA+ counterpart (e.g. the ECONOMICS truth the spec never formalised).",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 103
+      }
+    },
+    {
+      "id": "extract.SpecValidated",
+      "label": "SpecValidated",
+      "truth": "extract",
+      "doc": "SpecValidated: a TLA+ invariant in the model-checked .cfg set has a live Go checker.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 98
+      }
+    },
+    {
+      "id": "extract.conjunct",
+      "label": "conjunct",
+      "truth": "extract",
+      "doc": "conjunct pulls the identifier out of a `/\\ Name` aggregator line.",
+      "loc": {
+        "file": "extract/tla.go",
+        "line": 27
+      }
+    },
+    {
+      "id": "extract.defStart",
+      "label": "defStart",
+      "truth": "extract",
+      "doc": "defStart matches a top-level operator definition: a name at column 0 followed by \"==\". The remainder of the line is the first body line.",
+      "loc": {
+        "file": "extract/tla.go",
+        "line": 25
+      }
+    },
+    {
+      "id": "gen.PhaseSANY",
+      "label": "PhaseSANY",
+      "truth": "gen",
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 30
+      }
+    },
+    {
+      "id": "gen.PhaseTLC",
+      "label": "PhaseTLC",
+      "truth": "gen",
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 31
+      }
+    },
+    {
+      "id": "gen.kindBool",
+      "label": "kindBool",
+      "truth": "gen",
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 278
+      }
+    },
+    {
+      "id": "gen.kindNum",
+      "label": "kindNum",
+      "truth": "gen",
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 277
+      }
+    },
+    {
+      "id": "gen.kindOther",
+      "label": "kindOther",
+      "truth": "gen",
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 279
+      }
+    },
+    {
+      "id": "gen.maxNatDefault",
+      "label": "maxNatDefault",
+      "truth": "gen",
+      "doc": "maxNatDefault bounds every numeric variable to 0..MaxNat so the state space is finite. Small by design; raise it in the .cfg for a deeper search.",
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 34
+      }
+    },
+    {
+      "id": "gen.reBackslashOp",
+      "label": "reBackslashOp",
+      "truth": "gen",
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 356
+      }
+    },
+    {
+      "id": "gen.reIdent",
+      "label": "reIdent",
+      "truth": "gen",
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 355
+      }
+    },
+    {
+      "id": "gen.reNumeric",
+      "label": "reNumeric",
+      "truth": "gen",
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 308
+      }
+    },
+    {
+      "id": "gen.reTLCDepth",
+      "label": "reTLCDepth",
+      "truth": "gen",
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 162
+      }
+    },
+    {
+      "id": "gen.reTLCErrorLine",
+      "label": "reTLCErrorLine",
+      "truth": "gen",
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 164
+      }
+    },
+    {
+      "id": "gen.reTLCStates",
+      "label": "reTLCStates",
+      "truth": "gen",
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 161
+      }
+    },
+    {
+      "id": "gen.reTLCViolated",
+      "label": "reTLCViolated",
+      "truth": "gen",
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 163
+      }
+    },
+    {
+      "id": "gen.tlaKeywords",
+      "label": "tlaKeywords",
+      "truth": "gen",
+      "doc": "tlaKeywords are identifiers that appear in predicates but are not state variables, so they don't count against a predicate \"resolving\".",
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 346
+      }
+    }
+  ],
+  "faults": [
+    {
+      "id": "extract.Bundle",
+      "enum": "Bundle",
+      "label": "Bundle  (extract struct)",
+      "doc": "Bundle is the distilled, source-grounded view of a codebase handed to the TLA+ generator: the mutable state, the operations as candidate transitions (each with its handler source so the model can read the actual mutations), the invariants to formalise, and the faults. It is deliberately compact — the structured model plus only the source snippets that matter — so it grounds the generator without shipping the whole repo.",
+      "loc": {
+        "file": "extract/bundle.go",
+        "line": 16
+      }
+    },
+    {
+      "id": "extract.Config",
+      "enum": "Config",
+      "label": "Config  (extract struct)",
+      "doc": "Config describes where, in an arbitrary Go codebase, the four domain concepts live and what they're called. Nothing about CharterTrace's sim is baked into the extractor any more — DefaultConfig() merely supplies the sim's names. Point the tool at any repo by writing a config (see presets/sim.json) that names that repo's catalogue vars, enum type, checker-method pattern, and — for \"any tracing setup\" — the instrumentation call that records a fault.",
+      "loc": {
+        "file": "extract/config.go",
+        "line": 15
+      }
+    },
+    {
+      "id": "extract.Edge",
+      "enum": "Edge",
+      "label": "Edge  (extract struct)",
+      "doc": "Edge connects two nodes. Node IDs are namespaced: \"truth:PAYMENT\", \"inv:PAYMENT-11\", \"fault:crash_after_stripe\", \"op:3\", \"spec:NoNegativeBalances\".",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 215
+      }
+    },
+    {
+      "id": "extract.Fault",
+      "enum": "Fault",
+      "label": "Fault  (extract struct)",
+      "doc": "Fault is one injectable failure mode. Enum is the Go constant name; ID is the snake_case name the engine uses on the wire and in metrics.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 163
+      }
+    },
+    {
+      "id": "extract.FaultConfig",
+      "enum": "FaultConfig",
+      "label": "FaultConfig  (extract struct)",
+      "doc": "FaultConfig locates the injectable-fault catalogue.",
+      "loc": {
+        "file": "extract/config.go",
+        "line": 59
+      }
+    },
+    {
+      "id": "extract.FieldEffect",
+      "enum": "FieldEffect",
+      "label": "FieldEffect  (extract struct)",
+      "doc": "FieldEffect is the recovered shape of a write to one state field, when it matches a simple deterministic form. Op names the form; Value is the rendered literal operand for the forms that take one.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 196
+      }
+    },
+    {
+      "id": "extract.Invariant",
+      "enum": "Invariant",
+      "label": "Invariant  (extract struct)",
+      "doc": "Invariant is one TLA+-derived safety property the sim checks after every op.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 82
+      }
+    },
+    {
+      "id": "extract.InvariantConfig",
+      "enum": "InvariantConfig",
+      "label": "InvariantConfig  (extract struct)",
+      "doc": "InvariantConfig locates the safety-property catalogue.",
+      "loc": {
+        "file": "extract/config.go",
+        "line": 74
+      }
+    },
+    {
+      "id": "extract.Labels",
+      "enum": "Labels",
+      "label": "Labels  (extract struct)",
+      "doc": "Labels names the four node buckets for the current mode.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 53
+      }
+    },
+    {
+      "id": "extract.Loc",
+      "enum": "Loc",
+      "label": "Loc  (extract struct)",
+      "doc": "Loc is a source location, written relative to the sim root so the viewer can link a node back to the line that defines it.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 69
+      }
+    },
+    {
+      "id": "extract.Meta",
+      "enum": "Meta",
+      "label": "Meta  (extract struct)",
+      "doc": "Meta tells the viewer how to label a model whose buckets don't carry their DST meaning. The node/edge shape is identical; only the words change.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 46
+      }
+    },
+    {
+      "id": "extract.Model",
+      "enum": "Model",
+      "label": "Model  (extract struct)",
+      "doc": "Model is the complete extracted picture of the DST, ready to serialise to JSON for the viewer.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 21
+      }
+    },
+    {
+      "id": "extract.OpSpec",
+      "enum": "OpSpec",
+      "label": "OpSpec  (extract struct)",
+      "doc": "OpSpec is one operation enriched with the rendered Go source of its handler, so the generator can see which state the transition reads and writes rather than guessing from the name alone.",
+      "loc": {
+        "file": "extract/bundle.go",
+        "line": 27
+      }
+    },
+    {
+      "id": "extract.Operation",
+      "enum": "Operation",
+      "label": "Operation  (extract struct)",
+      "doc": "Operation is one weighted action the engine can dispatch. Faults lists the fault enums its handler body actually records via e.recordFault(...).",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 173
+      }
+    },
+    {
+      "id": "extract.OperationConfig",
+      "enum": "OperationConfig",
+      "label": "OperationConfig  (extract struct)",
+      "doc": "OperationConfig locates the weighted operation table and the instrumentation call that links an operation to the faults it injects.",
+      "loc": {
+        "file": "extract/config.go",
+        "line": 87
+      }
+    },
+    {
+      "id": "extract.Source",
+      "enum": "Source",
+      "label": "Source  (extract struct)",
+      "doc": "Source records where the model came from, so a stale artifact is obvious.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 61
+      }
+    },
+    {
+      "id": "extract.SpecInvariant",
+      "enum": "SpecInvariant",
+      "label": "SpecInvariant  (extract struct)",
+      "doc": "SpecInvariant is one invariant declared in a TLA+ specification. Predicate is the verbatim operator body; Checked reports whether the TLC .cfg model-checks it. Like every node, it carries the source location it was parsed from.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 109
+      }
+    },
+    {
+      "id": "extract.SpecRef",
+      "enum": "SpecRef",
+      "label": "SpecRef  (extract struct)",
+      "doc": "SpecRef is the back-reference from a Go invariant to the spec invariant it validates, denormalised so the viewer needn't cross-index Specs.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 150
+      }
+    },
+    {
+      "id": "extract.StateConfig",
+      "enum": "StateConfig",
+      "label": "StateConfig  (extract struct)",
+      "doc": "StateConfig names the mutable state type the operations act on, so the TLA+ generator has VARIABLES to abstract. Optional: an empty TypeName leaves Model.State nil and the structural pipeline unaffected.",
+      "loc": {
+        "file": "extract/config.go",
+        "line": 32
+      }
+    },
+    {
+      "id": "extract.StateModel",
+      "enum": "StateModel",
+      "label": "StateModel  (extract struct)",
+      "doc": "StateModel is the mutable state the operations act on, the basis for the TLA+ VARIABLES. Kind is \"struct\" (Variables are its fields) or \"interface\" (Variables are its mutating methods); the TLA+ generator abstracts each.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 132
+      }
+    },
+    {
+      "id": "extract.StateVar",
+      "enum": "StateVar",
+      "label": "StateVar  (extract struct)",
+      "doc": "StateVar is one component of the state: a struct field or an interface method. Type is the rendered Go type (a field's type, or a method's signature).",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 141
+      }
+    },
+    {
+      "id": "extract.Stats",
+      "enum": "Stats",
+      "label": "Stats  (extract struct)",
+      "doc": "Stats are convenience totals so the viewer needn't recompute them.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 222
+      }
+    },
+    {
+      "id": "extract.StructureConfig",
+      "enum": "StructureConfig",
+      "label": "StructureConfig  (extract struct)",
+      "doc": "StructureConfig drives the generic, non-DST extraction mode: it works on any Go module, not just a sim-shaped one. Root is the module/dir to parse; Packages restricts to sub-directories (empty = recurse the whole tree); ExportedOnly drops unexported declarations.",
+      "loc": {
+        "file": "extract/structure.go",
+        "line": 16
+      }
+    },
+    {
+      "id": "extract.TLAConfig",
+      "enum": "TLAConfig",
+      "label": "TLAConfig  (extract struct)",
+      "doc": "TLAConfig locates the formal TLA+ specification the invariant catalogue is derived from, so the extractor can bind each Go invariant to the spec invariant it validates at runtime and report coverage. All fields optional; an empty SpecDir disables the layer entirely (the model has no specs and every invariant's specStatus stays empty), so non-TLA codebases are unaffected.",
+      "loc": {
+        "file": "extract/config.go",
+        "line": 46
+      }
+    },
+    {
+      "id": "extract.Truth",
+      "enum": "Truth",
+      "label": "Truth  (extract struct)",
+      "doc": "Truth is one of the nine categories the invariants partition into (SPATIAL, PAYMENT, ECONOMICS, …). Count is how many invariants carry that prefix.",
+      "loc": {
+        "file": "extract/model.go",
+        "line": 76
+      }
+    },
+    {
+      "id": "extract.pkg",
+      "enum": "pkg",
+      "label": "pkg  (extract struct)",
+      "doc": "pkg is one parsed Go package: every non-test .go file in a directory, parsed with comments so doc strings survive into the model.",
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 16
+      }
+    },
+    {
+      "id": "extract.specDef",
+      "enum": "specDef",
+      "label": "specDef  (extract struct)",
+      "doc": "specDef is one parsed TLA+ operator definition before we decide whether it is an invariant worth surfacing.",
+      "loc": {
+        "file": "extract/tla.go",
+        "line": 32
+      }
+    },
+    {
+      "id": "gen.Draft",
+      "enum": "Draft",
+      "label": "Draft  (gen struct)",
+      "doc": "Draft is a synthesised TLA+ spec: the module text, the TLC config, and the module name (which must match the .tla filename for the tools).",
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 13
+      }
+    },
+    {
+      "id": "gen.GenResult",
+      "enum": "GenResult",
+      "label": "GenResult  (gen struct)",
+      "doc": "GenResult is the outcome: the synthesised draft, the synthesis report, and the verification results. Verified is true only when TLC checked the spec clean — here that means the initial state satisfies TypeOK and the active invariants.",
+      "loc": {
+        "file": "gen/generate.go",
+        "line": 22
+      }
+    },
+    {
+      "id": "gen.Options",
+      "enum": "Options",
+      "label": "Options  (gen struct)",
+      "doc": "Options tunes deterministic generation + verification.",
+      "loc": {
+        "file": "gen/generate.go",
+        "line": 13
+      }
+    },
+    {
+      "id": "gen.Phase",
+      "enum": "Phase",
+      "label": "Phase  (gen alias)",
+      "doc": "Phase names which tool produced a Result.",
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 27
+      }
+    },
+    {
+      "id": "gen.Result",
+      "enum": "Result",
+      "label": "Result  (gen struct)",
+      "doc": "Result is the parsed outcome of one tool invocation.",
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 35
+      }
+    },
+    {
+      "id": "gen.SynthReport",
+      "enum": "SynthReport",
+      "label": "SynthReport  (gen struct)",
+      "doc": "SynthReport summarises what the deterministic synthesiser could and could not recover, so the result is honest about its own gaps.",
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 21
+      }
+    },
+    {
+      "id": "gen.TLCOptions",
+      "enum": "TLCOptions",
+      "label": "TLCOptions  (gen struct)",
+      "doc": "TLCOptions bounds a model-checking run so a runaway state space cannot hang the pipeline. Timeouts are the caller's responsibility via the context.",
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 50
+      }
+    },
+    {
+      "id": "gen.Toolchain",
+      "enum": "Toolchain",
+      "label": "Toolchain  (gen struct)",
+      "doc": "Toolchain runs the bundled TLA+ tools (tla2tools.jar) through a JVM.",
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 21
+      }
+    },
+    {
+      "id": "gen.synthVar",
+      "enum": "synthVar",
+      "label": "synthVar  (gen struct)",
+      "doc": "synthVar is one TLA+ variable derived from a Go state field.",
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 267
+      }
+    }
+  ],
+  "operations": [
+    {
+      "index": 0,
+      "handler": "cli.Main",
+      "name": "Main",
+      "weight": 11,
+      "share": 0.004737295434969853,
+      "note": "(args []string)",
+      "faults": null,
+      "loc": {
+        "file": "cli/extract.go",
+        "line": 29
+      }
+    },
+    {
+      "index": 1,
+      "handler": "cli.RunExtract",
+      "name": "RunExtract",
+      "weight": 21,
+      "share": 0.00904392764857881,
+      "note": "(args []string)",
+      "faults": null,
+      "loc": {
+        "file": "cli/extract.go",
+        "line": 42
+      }
+    },
+    {
+      "index": 2,
+      "handler": "cli.RunGenerate",
+      "name": "RunGenerate",
+      "weight": 72,
+      "share": 0.031007751937984496,
+      "note": "(args []string)",
+      "faults": null,
+      "loc": {
+        "file": "cli/generate.go",
+        "line": 20
+      }
+    },
+    {
+      "index": 3,
+      "handler": "cli.RunStructure",
+      "name": "RunStructure",
+      "weight": 27,
+      "share": 0.011627906976744186,
+      "note": "(args []string)",
+      "faults": null,
+      "loc": {
+        "file": "cli/structure.go",
+        "line": 15
+      }
+    },
+    {
+      "index": 4,
+      "handler": "cli.fail",
+      "name": "fail",
+      "weight": 4,
+      "share": 0.0017226528854435831,
+      "note": "(format string, args ...any)",
+      "faults": null,
+      "loc": {
+        "file": "cli/extract.go",
+        "line": 102
+      }
+    },
+    {
+      "index": 5,
+      "handler": "cli.loadConfig",
+      "name": "loadConfig",
+      "weight": 17,
+      "share": 0.007321274763135229,
+      "note": "(configPath, root string) extract.Config",
+      "faults": [
+        "Config"
+      ],
+      "loc": {
+        "file": "cli/extract.go",
+        "line": 65
+      }
+    },
+    {
+      "index": 6,
+      "handler": "cli.reportVerification",
+      "name": "reportVerification",
+      "weight": 20,
+      "share": 0.008613264427217916,
+      "note": "(res *gen.GenResult, dir string)",
+      "faults": [
+        "GenResult"
+      ],
+      "loc": {
+        "file": "cli/generate.go",
+        "line": 106
+      }
+    },
+    {
+      "index": 7,
+      "handler": "cli.write",
+      "name": "write",
+      "weight": 18,
+      "share": 0.007751937984496124,
+      "note": "(path string, indent bool, model *extract.Model) error",
+      "faults": [
+        "Model"
+      ],
+      "loc": {
+        "file": "cli/extract.go",
+        "line": 83
+      }
+    },
+    {
+      "index": 8,
+      "handler": "cli.writeSpec",
+      "name": "writeSpec",
+      "weight": 9,
+      "share": 0.003875968992248062,
+      "note": "(dir string, d *gen.Draft) error",
+      "faults": [
+        "Draft"
+      ],
+      "loc": {
+        "file": "cli/generate.go",
+        "line": 94
+      }
+    },
+    {
+      "index": 9,
+      "handler": "extract.BuildBundle",
+      "name": "BuildBundle",
+      "weight": 40,
+      "share": 0.017226528854435832,
+      "note": "(cfg Config) (*Bundle, error)",
+      "faults": [
+        "Bundle",
+        "Config"
+      ],
+      "loc": {
+        "file": "extract/bundle.go",
+        "line": 36
+      }
+    },
+    {
+      "index": 10,
+      "handler": "extract.DefaultConfig",
+      "name": "DefaultConfig",
+      "weight": 37,
+      "share": 0.015934539190353144,
+      "note": "() Config",
+      "faults": [
+        "Config"
+      ],
+      "loc": {
+        "file": "extract/config.go",
+        "line": 108
+      }
+    },
+    {
+      "index": 11,
+      "handler": "extract.Extract",
+      "name": "Extract",
+      "weight": 77,
+      "share": 0.03316106804478897,
+      "note": "(cfg Config) (*Model, error)",
+      "faults": [
+        "Config",
+        "Model"
+      ],
+      "loc": {
+        "file": "extract/extract.go",
+        "line": 16
+      }
+    },
+    {
+      "index": 12,
+      "handler": "extract.ExtractStructure",
+      "name": "ExtractStructure",
+      "weight": 60,
+      "share": 0.025839793281653745,
+      "note": "(cfg StructureConfig) (*Model, error)",
+      "faults": [
+        "Model",
+        "StructureConfig"
+      ],
+      "loc": {
+        "file": "extract/structure.go",
+        "line": 35
+      }
+    },
+    {
+      "index": 13,
+      "handler": "extract.LoadConfig",
+      "name": "LoadConfig",
+      "weight": 12,
+      "share": 0.00516795865633075,
+      "note": "(path string) (Config, error)",
+      "faults": [
+        "Config"
+      ],
+      "loc": {
+        "file": "extract/config.go",
+        "line": 148
+      }
+    },
+    {
+      "index": 14,
+      "handler": "extract.MarkGenerated",
+      "name": "MarkGenerated",
+      "weight": 14,
+      "share": 0.006029285099052541,
+      "note": "(m *Model, verified bool, tlcStates, tlcDepth int)",
+      "faults": [
+        "Model"
+      ],
+      "loc": {
+        "file": "extract/extract.go",
+        "line": 212
+      }
+    },
+    {
+      "index": 15,
+      "handler": "extract.OperationConfig.handlerPrefix",
+      "name": "OperationConfig.handlerPrefix",
+      "weight": 6,
+      "share": 0.002583979328165375,
+      "note": "() string",
+      "faults": [
+        "OperationConfig"
+      ],
+      "loc": {
+        "file": "extract/config.go",
+        "line": 162
+      }
+    },
+    {
+      "index": 16,
+      "handler": "extract.attachSpecs",
+      "name": "attachSpecs",
+      "weight": 33,
+      "share": 0.014211886304909561,
+      "note": "(m *Model, cfg TLAConfig)",
+      "faults": [
+        "Model",
+        "TLAConfig"
+      ],
+      "loc": {
+        "file": "extract/extract.go",
+        "line": 99
+      }
+    },
+    {
+      "index": 17,
+      "handler": "extract.bodyLines",
+      "name": "bodyLines",
+      "weight": 10,
+      "share": 0.004306632213608958,
+      "note": "(p *pkg, fn *ast.FuncDecl) int",
+      "faults": [
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/structure.go",
+        "line": 330
+      }
+    },
+    {
+      "index": 18,
+      "handler": "extract.buildEdges",
+      "name": "buildEdges",
+      "weight": 69,
+      "share": 0.029715762273901807,
+      "note": "(m *Model) []Edge",
+      "faults": [
+        "Edge",
+        "Model"
+      ],
+      "loc": {
+        "file": "extract/extract.go",
+        "line": 137
+      }
+    },
+    {
+      "index": 19,
+      "handler": "extract.calleeName",
+      "name": "calleeName",
+      "weight": 9,
+      "share": 0.003875968992248062,
+      "note": "(fun ast.Expr) string",
+      "faults": null,
+      "loc": {
+        "file": "extract/operations.go",
+        "line": 182
+      }
+    },
+    {
+      "index": 20,
+      "handler": "extract.cleanComment",
+      "name": "cleanComment",
+      "weight": 6,
+      "share": 0.002583979328165375,
+      "note": "(s string) string",
+      "faults": null,
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 188
+      }
+    },
+    {
+      "index": 21,
+      "handler": "extract.cleanWeightNote",
+      "name": "cleanWeightNote",
+      "weight": 9,
+      "share": 0.003875968992248062,
+      "note": "(s string) string",
+      "faults": null,
+      "loc": {
+        "file": "extract/operations.go",
+        "line": 129
+      }
+    },
+    {
+      "index": 22,
+      "handler": "extract.constBlockHasType",
+      "name": "constBlockHasType",
+      "weight": 10,
+      "share": 0.004306632213608958,
+      "note": "(gd *ast.GenDecl, typ string) bool",
+      "faults": null,
+      "loc": {
+        "file": "extract/faults.go",
+        "line": 138
+      }
+    },
+    {
+      "index": 23,
+      "handler": "extract.containsToken",
+      "name": "containsToken",
+      "weight": 14,
+      "share": 0.006029285099052541,
+      "note": "(s, tok string) bool",
+      "faults": null,
+      "loc": {
+        "file": "extract/extract.go",
+        "line": 253
+      }
+    },
+    {
+      "index": 24,
+      "handler": "extract.dedent",
+      "name": "dedent",
+      "weight": 24,
+      "share": 0.0103359173126615,
+      "note": "(body []string) string",
+      "faults": null,
+      "loc": {
+        "file": "extract/tla.go",
+        "line": 224
+      }
+    },
+    {
+      "index": 25,
+      "handler": "extract.dedupeEdges",
+      "name": "dedupeEdges",
+      "weight": 20,
+      "share": 0.008613264427217916,
+      "note": "(edges *[]Edge)",
+      "faults": [
+        "Edge"
+      ],
+      "loc": {
+        "file": "extract/extract.go",
+        "line": 268
+      }
+    },
+    {
+      "index": 26,
+      "handler": "extract.deref",
+      "name": "deref",
+      "weight": 6,
+      "share": 0.002583979328165375,
+      "note": "(e ast.Expr) ast.Expr",
+      "faults": null,
+      "loc": {
+        "file": "extract/structure.go",
+        "line": 264
+      }
+    },
+    {
+      "index": 27,
+      "handler": "extract.docText",
+      "name": "docText",
+      "weight": 13,
+      "share": 0.005598621877691645,
+      "note": "(cg *ast.CommentGroup) string",
+      "faults": null,
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 196
+      }
+    },
+    {
+      "index": 28,
+      "handler": "extract.elementLits",
+      "name": "elementLits",
+      "weight": 13,
+      "share": 0.005598621877691645,
+      "note": "(e ast.Expr) []*ast.CompositeLit",
+      "faults": null,
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 288
+      }
+    },
+    {
+      "index": 29,
+      "handler": "extract.expandFuncPattern",
+      "name": "expandFuncPattern",
+      "weight": 22,
+      "share": 0.009474590869939707,
+      "note": "(pattern, id string) string",
+      "faults": null,
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 263
+      }
+    },
+    {
+      "index": 30,
+      "handler": "extract.extractFaults",
+      "name": "extractFaults",
+      "weight": 32,
+      "share": 0.013781223083548665,
+      "note": "(p *pkg, cfg FaultConfig) []Fault",
+      "faults": [
+        "Fault",
+        "FaultConfig",
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/faults.go",
+        "line": 13
+      }
+    },
+    {
+      "index": 31,
+      "handler": "extract.extractInvariants",
+      "name": "extractInvariants",
+      "weight": 52,
+      "share": 0.02239448751076658,
+      "note": "(p *pkg, cfg InvariantConfig) ([]Invariant, []Truth)",
+      "faults": [
+        "Invariant",
+        "InvariantConfig",
+        "Truth",
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/invariants.go",
+        "line": 12
+      }
+    },
+    {
+      "index": 32,
+      "handler": "extract.extractOperations",
+      "name": "extractOperations",
+      "weight": 40,
+      "share": 0.017226528854435832,
+      "note": "(p *pkg, cfg OperationConfig) []Operation",
+      "faults": [
+        "Operation",
+        "OperationConfig",
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/operations.go",
+        "line": 13
+      }
+    },
+    {
+      "index": 33,
+      "handler": "extract.extractState",
+      "name": "extractState",
+      "weight": 22,
+      "share": 0.009474590869939707,
+      "note": "(p *pkg, cfg StateConfig) *StateModel",
+      "faults": [
+        "StateConfig",
+        "StateModel",
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/state.go",
+        "line": 17
+      }
+    },
+    {
+      "index": 34,
+      "handler": "extract.extractWrites",
+      "name": "extractWrites",
+      "weight": 38,
+      "share": 0.01636520241171404,
+      "note": "(p *pkg, cfg OperationConfig, stateFields map[string]bool) map[string][]string",
+      "faults": [
+        "OperationConfig",
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/effects.go",
+        "line": 21
+      }
+    },
+    {
+      "index": 35,
+      "handler": "extract.faultByID",
+      "name": "faultByID",
+      "weight": 8,
+      "share": 0.0034453057708871662,
+      "note": "(m *Model, id string) (Fault, bool)",
+      "faults": [
+        "Fault",
+        "Model"
+      ],
+      "loc": {
+        "file": "extract/extract.go",
+        "line": 227
+      }
+    },
+    {
+      "index": 36,
+      "handler": "extract.faultCatalogue",
+      "name": "faultCatalogue",
+      "weight": 20,
+      "share": 0.008613264427217916,
+      "note": "(p *pkg, cfg FaultConfig) (map[string]string, []string)",
+      "faults": [
+        "FaultConfig",
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/faults.go",
+        "line": 48
+      }
+    },
+    {
+      "index": 37,
+      "handler": "extract.faultEnumDocs",
+      "name": "faultEnumDocs",
+      "weight": 35,
+      "share": 0.015073212747631352,
+      "note": "(p *pkg, cfg FaultConfig) (docs map[string]string, locs map[string]*Loc, order []string)",
+      "faults": [
+        "FaultConfig",
+        "Loc",
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/faults.go",
+        "line": 99
+      }
+    },
+    {
+      "index": 38,
+      "handler": "extract.faultNameMap",
+      "name": "faultNameMap",
+      "weight": 26,
+      "share": 0.01119724375538329,
+      "note": "(p *pkg, cfg FaultConfig) map[string]string",
+      "faults": [
+        "FaultConfig",
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/faults.go",
+        "line": 70
+      }
+    },
+    {
+      "index": 39,
+      "handler": "extract.floatLit",
+      "name": "floatLit",
+      "weight": 11,
+      "share": 0.004737295434969853,
+      "note": "(e ast.Expr) (float64, bool)",
+      "faults": null,
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 224
+      }
+    },
+    {
+      "index": 40,
+      "handler": "extract.forEachFile",
+      "name": "forEachFile",
+      "weight": 15,
+      "share": 0.006459948320413436,
+      "note": "(p *pkg, fn func(pkgName string, f *ast.File))",
+      "faults": [
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/structure.go",
+        "line": 226
+      }
+    },
+    {
+      "index": 41,
+      "handler": "extract.forEachGenSpec",
+      "name": "forEachGenSpec",
+      "weight": 11,
+      "share": 0.004737295434969853,
+      "note": "(f *ast.File, tok token.Token, fn func(ast.Spec))",
+      "faults": null,
+      "loc": {
+        "file": "extract/structure.go",
+        "line": 243
+      }
+    },
+    {
+      "index": 42,
+      "handler": "extract.goDirs",
+      "name": "goDirs",
+      "weight": 25,
+      "share": 0.010766580534022395,
+      "note": "(root string) ([]string, error)",
+      "faults": null,
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 74
+      }
+    },
+    {
+      "index": 43,
+      "handler": "extract.identName",
+      "name": "identName",
+      "weight": 9,
+      "share": 0.003875968992248062,
+      "note": "(e ast.Expr) string",
+      "faults": null,
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 304
+      }
+    },
+    {
+      "index": 44,
+      "handler": "extract.lastSegment",
+      "name": "lastSegment",
+      "weight": 6,
+      "share": 0.002583979328165375,
+      "note": "(s string) string",
+      "faults": null,
+      "loc": {
+        "file": "extract/operations.go",
+        "line": 194
+      }
+    },
+    {
+      "index": 45,
+      "handler": "extract.mentionedIDs",
+      "name": "mentionedIDs",
+      "weight": 12,
+      "share": 0.00516795865633075,
+      "note": "(doc string, ids []string) []string",
+      "faults": null,
+      "loc": {
+        "file": "extract/extract.go",
+        "line": 238
+      }
+    },
+    {
+      "index": 46,
+      "handler": "extract.opTableOrder",
+      "name": "opTableOrder",
+      "weight": 20,
+      "share": 0.008613264427217916,
+      "note": "(p *pkg, tableVar string) []string",
+      "faults": [
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/operations.go",
+        "line": 56
+      }
+    },
+    {
+      "index": 47,
+      "handler": "extract.opWeights",
+      "name": "opWeights",
+      "weight": 47,
+      "share": 0.020241171403962102,
+      "note": "(p *pkg, cfg OperationConfig) (weights []float64, notes map[int]string)",
+      "faults": [
+        "OperationConfig",
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/operations.go",
+        "line": 79
+      }
+    },
+    {
+      "index": 48,
+      "handler": "extract.parseCfgInvariants",
+      "name": "parseCfgInvariants",
+      "weight": 24,
+      "share": 0.0103359173126615,
+      "note": "(path string) (map[string]bool, error)",
+      "faults": null,
+      "loc": {
+        "file": "extract/tla.go",
+        "line": 252
+      }
+    },
+    {
+      "index": 49,
+      "handler": "extract.parseDir",
+      "name": "parseDir",
+      "weight": 15,
+      "share": 0.006459948320413436,
+      "note": "(fset *token.FileSet, dir, simRoot string) (*pkg, error)",
+      "faults": [
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 23
+      }
+    },
+    {
+      "index": 50,
+      "handler": "extract.parseRoots",
+      "name": "parseRoots",
+      "weight": 28,
+      "share": 0.012058570198105082,
+      "note": "(fset *token.FileSet, root string, packages []string) (*pkg, error)",
+      "faults": [
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 43
+      }
+    },
+    {
+      "index": 51,
+      "handler": "extract.parseSpecFile",
+      "name": "parseSpecFile",
+      "weight": 79,
+      "share": 0.034022394487510765,
+      "note": "(src, base, rel string) (map[string]specDef, map[string]bool)",
+      "faults": [
+        "specDef"
+      ],
+      "loc": {
+        "file": "extract/tla.go",
+        "line": 141
+      }
+    },
+    {
+      "index": 52,
+      "handler": "extract.parseSpecs",
+      "name": "parseSpecs",
+      "weight": 90,
+      "share": 0.03875968992248062,
+      "note": "(absSpecDir, cfgFile, simRoot string) ([]SpecInvariant, error)",
+      "faults": [
+        "SpecInvariant"
+      ],
+      "loc": {
+        "file": "extract/tla.go",
+        "line": 48
+      }
+    },
+    {
+      "index": 53,
+      "handler": "extract.pkg.commentByLine",
+      "name": "pkg.commentByLine",
+      "weight": 10,
+      "share": 0.004306632213608958,
+      "note": "(file *ast.File) map[int]string",
+      "faults": [
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 165
+      }
+    },
+    {
+      "index": 54,
+      "handler": "extract.pkg.fileOf",
+      "name": "pkg.fileOf",
+      "weight": 9,
+      "share": 0.003875968992248062,
+      "note": "(pos token.Pos) *ast.File",
+      "faults": [
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 177
+      }
+    },
+    {
+      "index": 55,
+      "handler": "extract.pkg.findFuncs",
+      "name": "pkg.findFuncs",
+      "weight": 12,
+      "share": 0.00516795865633075,
+      "note": "(keep func(name string) bool) map[string]*ast.FuncDecl",
+      "faults": [
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 123
+      }
+    },
+    {
+      "index": 56,
+      "handler": "extract.pkg.findTypeSpec",
+      "name": "pkg.findTypeSpec",
+      "weight": 17,
+      "share": 0.007321274763135229,
+      "note": "(name string) (*ast.TypeSpec, bool)",
+      "faults": [
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/state.go",
+        "line": 96
+      }
+    },
+    {
+      "index": 57,
+      "handler": "extract.pkg.findValueSpec",
+      "name": "pkg.findValueSpec",
+      "weight": 22,
+      "share": 0.009474590869939707,
+      "note": "(name string) (*ast.ValueSpec, bool)",
+      "faults": [
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 138
+      }
+    },
+    {
+      "index": 58,
+      "handler": "extract.pkg.interfaceVars",
+      "name": "pkg.interfaceVars",
+      "weight": 26,
+      "share": 0.01119724375538329,
+      "note": "(it *ast.InterfaceType) []StateVar",
+      "faults": [
+        "StateVar",
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/state.go",
+        "line": 68
+      }
+    },
+    {
+      "index": 59,
+      "handler": "extract.pkg.line",
+      "name": "pkg.line",
+      "weight": 6,
+      "share": 0.002583979328165375,
+      "note": "(pos token.Pos) int",
+      "faults": [
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 114
+      }
+    },
+    {
+      "index": 60,
+      "handler": "extract.pkg.loc",
+      "name": "pkg.loc",
+      "weight": 11,
+      "share": 0.004737295434969853,
+      "note": "(pos token.Pos) *Loc",
+      "faults": [
+        "Loc",
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 101
+      }
+    },
+    {
+      "index": 61,
+      "handler": "extract.pkg.renderFieldList",
+      "name": "pkg.renderFieldList",
+      "weight": 19,
+      "share": 0.00818260120585702,
+      "note": "(fl *ast.FieldList) string",
+      "faults": [
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/state.go",
+        "line": 125
+      }
+    },
+    {
+      "index": 62,
+      "handler": "extract.pkg.renderNode",
+      "name": "pkg.renderNode",
+      "weight": 7,
+      "share": 0.0030146425495262705,
+      "note": "(n ast.Node) string",
+      "faults": [
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/state.go",
+        "line": 116
+      }
+    },
+    {
+      "index": 63,
+      "handler": "extract.pkg.structVars",
+      "name": "pkg.structVars",
+      "weight": 21,
+      "share": 0.00904392764857881,
+      "note": "(st *ast.StructType) []StateVar",
+      "faults": [
+        "StateVar",
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/state.go",
+        "line": 42
+      }
+    },
+    {
+      "index": 64,
+      "handler": "extract.readField",
+      "name": "readField",
+      "weight": 17,
+      "share": 0.007321274763135229,
+      "note": "(lit *ast.CompositeLit, ref string) string",
+      "faults": null,
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 242
+      }
+    },
+    {
+      "index": 65,
+      "handler": "extract.receiverType",
+      "name": "receiverType",
+      "weight": 6,
+      "share": 0.002583979328165375,
+      "note": "(fn *ast.FuncDecl) string",
+      "faults": null,
+      "loc": {
+        "file": "extract/structure.go",
+        "line": 257
+      }
+    },
+    {
+      "index": 66,
+      "handler": "extract.referencedTypes",
+      "name": "referencedTypes",
+      "weight": 42,
+      "share": 0.01808785529715762,
+      "note": "(fn *ast.FuncDecl, typeID map[string]string) []string",
+      "faults": null,
+      "loc": {
+        "file": "extract/structure.go",
+        "line": 273
+      }
+    },
+    {
+      "index": 67,
+      "handler": "extract.signature",
+      "name": "signature",
+      "weight": 11,
+      "share": 0.004737295434969853,
+      "note": "(p *pkg, fn *ast.FuncDecl) string",
+      "faults": [
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/structure.go",
+        "line": 317
+      }
+    },
+    {
+      "index": 68,
+      "handler": "extract.stateFieldSet",
+      "name": "stateFieldSet",
+      "weight": 10,
+      "share": 0.004306632213608958,
+      "note": "(sm *StateModel) map[string]bool",
+      "faults": [
+        "StateModel"
+      ],
+      "loc": {
+        "file": "extract/effects.go",
+        "line": 84
+      }
+    },
+    {
+      "index": 69,
+      "handler": "extract.stringLit",
+      "name": "stringLit",
+      "weight": 11,
+      "share": 0.004737295434969853,
+      "note": "(e ast.Expr) string",
+      "faults": null,
+      "loc": {
+        "file": "extract/parse.go",
+        "line": 211
+      }
+    },
+    {
+      "index": 70,
+      "handler": "extract.structureFuncs",
+      "name": "structureFuncs",
+      "weight": 38,
+      "share": 0.01636520241171404,
+      "note": "(p *pkg, keep func(string) bool, typeID map[string]string) []Operation",
+      "faults": [
+        "Operation",
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/structure.go",
+        "line": 133
+      }
+    },
+    {
+      "index": 71,
+      "handler": "extract.structurePackageGlobals",
+      "name": "structurePackageGlobals",
+      "weight": 46,
+      "share": 0.019810508182601206,
+      "note": "(p *pkg, keep func(string) bool) ([]Invariant, []Truth)",
+      "faults": [
+        "Invariant",
+        "Truth",
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/structure.go",
+        "line": 175
+      }
+    },
+    {
+      "index": 72,
+      "handler": "extract.structureTypes",
+      "name": "structureTypes",
+      "weight": 30,
+      "share": 0.012919896640826873,
+      "note": "(p *pkg, keep func(string) bool) []Fault",
+      "faults": [
+        "Fault",
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/structure.go",
+        "line": 99
+      }
+    },
+    {
+      "index": 73,
+      "handler": "extract.totalWeight",
+      "name": "totalWeight",
+      "weight": 7,
+      "share": 0.0030146425495262705,
+      "note": "(ops []Operation) float64",
+      "faults": [
+        "Operation"
+      ],
+      "loc": {
+        "file": "extract/extract.go",
+        "line": 289
+      }
+    },
+    {
+      "index": 74,
+      "handler": "extract.traceCalls",
+      "name": "traceCalls",
+      "weight": 35,
+      "share": 0.015073212747631352,
+      "note": "(p *pkg, cfg OperationConfig) map[string][]string",
+      "faults": [
+        "OperationConfig",
+        "pkg"
+      ],
+      "loc": {
+        "file": "extract/operations.go",
+        "line": 144
+      }
+    },
+    {
+      "index": 75,
+      "handler": "extract.typeKind",
+      "name": "typeKind",
+      "weight": 12,
+      "share": 0.00516795865633075,
+      "note": "(e ast.Expr) string",
+      "faults": null,
+      "loc": {
+        "file": "extract/structure.go",
+        "line": 342
+      }
+    },
+    {
+      "index": 76,
+      "handler": "extract.writtenField",
+      "name": "writtenField",
+      "weight": 18,
+      "share": 0.007751937984496124,
+      "note": "(e ast.Expr) string",
+      "faults": null,
+      "loc": {
+        "file": "extract/effects.go",
+        "line": 63
+      }
+    },
+    {
+      "index": 77,
+      "handler": "gen.FindJar",
+      "name": "FindJar",
+      "weight": 18,
+      "share": 0.007751937984496124,
+      "note": "(jarHint string, searchDirs ...string) (string, error)",
+      "faults": null,
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 85
+      }
+    },
+    {
+      "index": 78,
+      "handler": "gen.Generate",
+      "name": "Generate",
+      "weight": 39,
+      "share": 0.016795865633074936,
+      "note": "(ctx context.Context, tc *Toolchain, m *extract.Model, opts Options) (*GenResult, error)",
+      "faults": [
+        "GenResult",
+        "Model",
+        "Options",
+        "Toolchain"
+      ],
+      "loc": {
+        "file": "gen/generate.go",
+        "line": 35
+      }
+    },
+    {
+      "index": 79,
+      "handler": "gen.NewToolchain",
+      "name": "NewToolchain",
+      "weight": 11,
+      "share": 0.004737295434969853,
+      "note": "(jarHint string, searchDirs ...string) (*Toolchain, error)",
+      "faults": [
+        "Toolchain"
+      ],
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 58
+      }
+    },
+    {
+      "index": 80,
+      "handler": "gen.Synthesize",
+      "name": "Synthesize",
+      "weight": 158,
+      "share": 0.06804478897502153,
+      "note": "(m *extract.Model, moduleName string) (*Draft, *SynthReport, error)",
+      "faults": [
+        "Draft",
+        "Model",
+        "SynthReport"
+      ],
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 50
+      }
+    },
+    {
+      "index": 81,
+      "handler": "gen.Toolchain.SANY",
+      "name": "Toolchain.SANY",
+      "weight": 8,
+      "share": 0.0034453057708871662,
+      "note": "(ctx context.Context, tlaPath string) (*Result, error)",
+      "faults": [
+        "Result",
+        "Toolchain"
+      ],
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 106
+      }
+    },
+    {
+      "index": 82,
+      "handler": "gen.Toolchain.TLC",
+      "name": "Toolchain.TLC",
+      "weight": 19,
+      "share": 0.00818260120585702,
+      "note": "(ctx context.Context, tlaPath, cfgPath string, opts TLCOptions) (*Result, error)",
+      "faults": [
+        "Result",
+        "TLCOptions",
+        "Toolchain"
+      ],
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 118
+      }
+    },
+    {
+      "index": 83,
+      "handler": "gen.Toolchain.run",
+      "name": "Toolchain.run",
+      "weight": 19,
+      "share": 0.00818260120585702,
+      "note": "(ctx context.Context, workdir string, args ...string) (out string, code int, timedOut bool, err error)",
+      "faults": [
+        "Toolchain"
+      ],
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 140
+      }
+    },
+    {
+      "index": 84,
+      "handler": "gen.fileExists",
+      "name": "fileExists",
+      "weight": 4,
+      "share": 0.0017226528854435831,
+      "note": "(p string) bool",
+      "faults": null,
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 229
+      }
+    },
+    {
+      "index": 85,
+      "handler": "gen.findJava",
+      "name": "findJava",
+      "weight": 12,
+      "share": 0.00516795865633075,
+      "note": "() (string, error)",
+      "faults": null,
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 70
+      }
+    },
+    {
+      "index": 86,
+      "handler": "gen.indent",
+      "name": "indent",
+      "weight": 9,
+      "share": 0.003875968992248062,
+      "note": "(body string) string",
+      "faults": null,
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 409
+      }
+    },
+    {
+      "index": 87,
+      "handler": "gen.isExecutable",
+      "name": "isExecutable",
+      "weight": 4,
+      "share": 0.0017226528854435831,
+      "note": "(p string) bool",
+      "faults": null,
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 234
+      }
+    },
+    {
+      "index": 88,
+      "handler": "gen.nonEmpty",
+      "name": "nonEmpty",
+      "weight": 6,
+      "share": 0.002583979328165375,
+      "note": "(s, fallback string) string",
+      "faults": null,
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 419
+      }
+    },
+    {
+      "index": 89,
+      "handler": "gen.opAction",
+      "name": "opAction",
+      "weight": 51,
+      "share": 0.021963824289405683,
+      "note": "(name string, op extract.Operation, vars []synthVar, byField map[string]synthVar) (text string, real bool)",
+      "faults": [
+        "Operation",
+        "synthVar"
+      ],
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 214
+      }
+    },
+    {
+      "index": 90,
+      "handler": "gen.parseSANY",
+      "name": "parseSANY",
+      "weight": 12,
+      "share": 0.00516795865633075,
+      "note": "(out string, code int, timedOut bool) *Result",
+      "faults": [
+        "Result"
+      ],
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 196
+      }
+    },
+    {
+      "index": 91,
+      "handler": "gen.parseTLC",
+      "name": "parseTLC",
+      "weight": 23,
+      "share": 0.009905254091300603,
+      "note": "(out string, code int, timedOut bool) *Result",
+      "faults": [
+        "Result"
+      ],
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 170
+      }
+    },
+    {
+      "index": 92,
+      "handler": "gen.predicateResolves",
+      "name": "predicateResolves",
+      "weight": 19,
+      "share": 0.00818260120585702,
+      "note": "(pred string, vars map[string]bool) bool",
+      "faults": null,
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 367
+      }
+    },
+    {
+      "index": 93,
+      "handler": "gen.recoverPredicate",
+      "name": "recoverPredicate",
+      "weight": 9,
+      "share": 0.003875968992248062,
+      "note": "(inv extract.Invariant, specs map[string]extract.SpecInvariant) string",
+      "faults": [
+        "Invariant",
+        "SpecInvariant"
+      ],
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 334
+      }
+    },
+    {
+      "index": 94,
+      "handler": "gen.sanitizeIdent",
+      "name": "sanitizeIdent",
+      "weight": 10,
+      "share": 0.004306632213608958,
+      "note": "(s string) string",
+      "faults": null,
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 389
+      }
+    },
+    {
+      "index": 95,
+      "handler": "gen.sanyErrorLines",
+      "name": "sanyErrorLines",
+      "weight": 17,
+      "share": 0.007321274763135229,
+      "note": "(out string) []string",
+      "faults": null,
+      "loc": {
+        "file": "gen/toolchain.go",
+        "line": 211
+      }
+    },
+    {
+      "index": 96,
+      "handler": "gen.stateVars",
+      "name": "stateVars",
+      "weight": 22,
+      "share": 0.009474590869939707,
+      "note": "(m *extract.Model) []synthVar",
+      "faults": [
+        "Model",
+        "synthVar"
+      ],
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 285
+      }
+    },
+    {
+      "index": 97,
+      "handler": "gen.tlaTypeOf",
+      "name": "tlaTypeOf",
+      "weight": 17,
+      "share": 0.007321274763135229,
+      "note": "(goType string) init, typeOK, kind string",
+      "faults": null,
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 314
+      }
+    },
+    {
+      "index": 98,
+      "handler": "gen.uniqueIdent",
+      "name": "uniqueIdent",
+      "weight": 8,
+      "share": 0.0034453057708871662,
+      "note": "(base string, used map[string]bool) string",
+      "faults": null,
+      "loc": {
+        "file": "gen/synth.go",
+        "line": 400
+      }
+    },
+    {
+      "index": 99,
+      "handler": "gen.writeDraft",
+      "name": "writeDraft",
+      "weight": 14,
+      "share": 0.006029285099052541,
+      "note": "(dir string, d *Draft) (tlaPath, cfgPath string, err error)",
+      "faults": [
+        "Draft"
+      ],
+      "loc": {
+        "file": "gen/generate.go",
+        "line": 76
+      }
+    },
+    {
+      "index": 100,
+      "handler": "main.main",
+      "name": "main",
+      "weight": 1,
+      "share": 0.0004306632213608958,
+      "note": "()",
+      "faults": null,
+      "loc": {
+        "file": "cmd/main.go",
+        "line": 17
+      }
+    },
+    {
+      "index": 101,
+      "handler": "main.main",
+      "name": "main",
+      "weight": 1,
+      "share": 0.0004306632213608958,
+      "note": "()",
+      "faults": null,
+      "loc": {
+        "file": "cmd/astdst/main.go",
+        "line": 25
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "op:10",
+      "to": "fault:extract.Config",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:11",
+      "to": "fault:extract.Config",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:11",
+      "to": "fault:extract.Model",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:12",
+      "to": "fault:extract.Model",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:12",
+      "to": "fault:extract.StructureConfig",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:13",
+      "to": "fault:extract.Config",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:14",
+      "to": "fault:extract.Model",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:15",
+      "to": "fault:extract.OperationConfig",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:16",
+      "to": "fault:extract.Model",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:16",
+      "to": "fault:extract.TLAConfig",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:17",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:18",
+      "to": "fault:extract.Edge",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:18",
+      "to": "fault:extract.Model",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:25",
+      "to": "fault:extract.Edge",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:30",
+      "to": "fault:extract.Fault",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:30",
+      "to": "fault:extract.FaultConfig",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:30",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:31",
+      "to": "fault:extract.Invariant",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:31",
+      "to": "fault:extract.InvariantConfig",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:31",
+      "to": "fault:extract.Truth",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:31",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:32",
+      "to": "fault:extract.Operation",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:32",
+      "to": "fault:extract.OperationConfig",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:32",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:33",
+      "to": "fault:extract.StateConfig",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:33",
+      "to": "fault:extract.StateModel",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:33",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:34",
+      "to": "fault:extract.OperationConfig",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:34",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:35",
+      "to": "fault:extract.Fault",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:35",
+      "to": "fault:extract.Model",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:36",
+      "to": "fault:extract.FaultConfig",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:36",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:37",
+      "to": "fault:extract.FaultConfig",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:37",
+      "to": "fault:extract.Loc",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:37",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:38",
+      "to": "fault:extract.FaultConfig",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:38",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:40",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:46",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:47",
+      "to": "fault:extract.OperationConfig",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:47",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:49",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:5",
+      "to": "fault:extract.Config",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:50",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:51",
+      "to": "fault:extract.specDef",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:52",
+      "to": "fault:extract.SpecInvariant",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:53",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:54",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:55",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:56",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:57",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:58",
+      "to": "fault:extract.StateVar",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:58",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:59",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:6",
+      "to": "fault:gen.GenResult",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:60",
+      "to": "fault:extract.Loc",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:60",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:61",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:62",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:63",
+      "to": "fault:extract.StateVar",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:63",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:67",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:68",
+      "to": "fault:extract.StateModel",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:7",
+      "to": "fault:extract.Model",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:70",
+      "to": "fault:extract.Operation",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:70",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:71",
+      "to": "fault:extract.Invariant",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:71",
+      "to": "fault:extract.Truth",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:71",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:72",
+      "to": "fault:extract.Fault",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:72",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:73",
+      "to": "fault:extract.Operation",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:74",
+      "to": "fault:extract.OperationConfig",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:74",
+      "to": "fault:extract.pkg",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:78",
+      "to": "fault:extract.Model",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:78",
+      "to": "fault:gen.GenResult",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:78",
+      "to": "fault:gen.Options",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:78",
+      "to": "fault:gen.Toolchain",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:79",
+      "to": "fault:gen.Toolchain",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:8",
+      "to": "fault:gen.Draft",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:80",
+      "to": "fault:extract.Model",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:80",
+      "to": "fault:gen.Draft",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:80",
+      "to": "fault:gen.SynthReport",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:81",
+      "to": "fault:gen.Result",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:81",
+      "to": "fault:gen.Toolchain",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:82",
+      "to": "fault:gen.Result",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:82",
+      "to": "fault:gen.TLCOptions",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:82",
+      "to": "fault:gen.Toolchain",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:83",
+      "to": "fault:gen.Toolchain",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:89",
+      "to": "fault:extract.Operation",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:89",
+      "to": "fault:gen.synthVar",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:9",
+      "to": "fault:extract.Bundle",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:9",
+      "to": "fault:extract.Config",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:90",
+      "to": "fault:gen.Result",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:91",
+      "to": "fault:gen.Result",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:93",
+      "to": "fault:extract.Invariant",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:93",
+      "to": "fault:extract.SpecInvariant",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:96",
+      "to": "fault:extract.Model",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:96",
+      "to": "fault:gen.synthVar",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:99",
+      "to": "fault:gen.Draft",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "truth:cli",
+      "to": "inv:cli.defaultRoot",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:extract",
+      "to": "inv:extract.EdgeMentionsInvariant",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:extract",
+      "to": "inv:extract.EdgeOpInjectsFault",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:extract",
+      "to": "inv:extract.EdgeTruthHasInvariant",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:extract",
+      "to": "inv:extract.EdgeValidates",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:extract",
+      "to": "inv:extract.SpecUnchecked",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:extract",
+      "to": "inv:extract.SpecUnspecified",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:extract",
+      "to": "inv:extract.SpecValidated",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:extract",
+      "to": "inv:extract.conjunct",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:extract",
+      "to": "inv:extract.defStart",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:gen",
+      "to": "inv:gen.PhaseSANY",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:gen",
+      "to": "inv:gen.PhaseTLC",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:gen",
+      "to": "inv:gen.kindBool",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:gen",
+      "to": "inv:gen.kindNum",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:gen",
+      "to": "inv:gen.kindOther",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:gen",
+      "to": "inv:gen.maxNatDefault",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:gen",
+      "to": "inv:gen.reBackslashOp",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:gen",
+      "to": "inv:gen.reIdent",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:gen",
+      "to": "inv:gen.reNumeric",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:gen",
+      "to": "inv:gen.reTLCDepth",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:gen",
+      "to": "inv:gen.reTLCErrorLine",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:gen",
+      "to": "inv:gen.reTLCStates",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:gen",
+      "to": "inv:gen.reTLCViolated",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:gen",
+      "to": "inv:gen.tlaKeywords",
+      "kind": "truth-has-invariant"
+    }
+  ],
+  "stats": {
+    "truths": 3,
+    "invariants": 24,
+    "faults": 36,
+    "operations": 102,
+    "totalWeight": 2322,
+    "edges": 125,
+    "specsTotal": 0,
+    "validated": 0,
+    "uncheckedSpec": 0,
+    "unspecified": 0
+  },
+  "meta": {
+    "mode": "structure",
+    "title": "Go structure",
+    "labels": {
+      "operations": "Functions",
+      "faults": "Types",
+      "invariants": "Vars \u0026 consts",
+      "truths": "Packages"
+    }
+  }
+}

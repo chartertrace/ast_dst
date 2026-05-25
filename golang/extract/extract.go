@@ -32,10 +32,20 @@ func Extract(cfg Config) (*Model, error) {
 	operations := extractOperations(p, cfg.Operations)
 	state := extractState(p, cfg.State)
 
-	// Attach each operation's state write set (the basis for its TLA+ transition).
-	if writes := extractWrites(p, cfg.Operations, stateFieldSet(state)); len(writes) > 0 {
+	// Attach each operation's state effects (the basis for its TLA+ transition):
+	// which fields it writes and, where recoverable, how.
+	if effects := extractEffects(p, cfg.Operations, stateFieldSet(state)); len(effects) > 0 {
 		for i := range operations {
-			operations[i].Writes = writes[operations[i].Handler]
+			effs := effects[operations[i].Handler]
+			if len(effs) == 0 {
+				continue
+			}
+			operations[i].Effects = effs
+			writes := make([]string, len(effs))
+			for j, e := range effs {
+				writes[j] = e.Field
+			}
+			operations[i].Writes = writes
 		}
 	}
 
@@ -209,10 +219,11 @@ func buildEdges(m *Model) []Edge {
 // a model whose TLA+ spec was produced by package gen, so the viewer can badge
 // generated/verified specs. verified must be the TLC outcome — never set true for
 // a spec TLC did not check clean.
-func MarkGenerated(m *Model, verified bool, tlcStates, tlcDepth int) {
+func MarkGenerated(m *Model, verified, behavioral bool, tlcStates, tlcDepth int) {
 	for i := range m.Specs {
 		m.Specs[i].Generated = true
 		m.Specs[i].Verified = verified
+		m.Specs[i].Behavioral = behavioral
 		m.Specs[i].TLCStates = tlcStates
 		m.Specs[i].TLCDepth = tlcDepth
 	}
@@ -220,6 +231,7 @@ func MarkGenerated(m *Model, verified bool, tlcStates, tlcDepth int) {
 		if ref := m.Invariants[i].Spec; ref != nil {
 			ref.Generated = true
 			ref.Verified = verified
+			ref.Behavioral = behavioral
 		}
 	}
 }
