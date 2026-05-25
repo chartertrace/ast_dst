@@ -71,11 +71,13 @@ The inverse of the binding layer below: instead of reading a hand-written spec,
 `astdst generate` *synthesises* one — **deterministically, with no LLM and no
 network**. The same model in always yields the same spec out. It declares the
 TLA+ `VARIABLES` + `Init` + `TypeOK` from the extracted state struct, turns each
-operation's **extracted write set** (which state fields its Go handler assigns)
-into a bounded transition — a written numeric field becomes `f' \in 0..MaxNat`,
-a bool ranges over `BOOLEAN` — and fills in invariant predicates **recovered
-verbatim** from a linked spec. It then **verifies with the real tools** — SANY
-(does it parse?) and TLC (do the invariants hold across the reachable states?).
+operation's **extracted effects** into a transition — a recovered simple form
+becomes a **value transition** (`clock' = clock + 1`, `flag' = TRUE`,
+`status' = "done"`), and a write whose form isn't recoverable falls back to a
+bounded nondeterministic update (`f' \in 0..MaxNat`) — and fills in invariant
+predicates **recovered verbatim** from a linked spec. It then **verifies with the
+real tools** — SANY (does it parse?) and TLC (do the invariants hold across the
+reachable states?).
 
 ```bash
 cd golang
@@ -86,9 +88,12 @@ go run ./cmd generate --out-spec ./generated --out model.json
 Requires only a JVM and `tla2tools.jar` (found via `--jar`, `$TLA2TOOLS_JAR`, or
 beside the configured spec dir) — no API key. The generated `.tla`/`.cfg` land
 in `--out-spec` and are re-extracted through the same binding layer, so the spec
-flows into `model.json` and the viewer like a hand-written one, badged `⚙✓`
-(TLC-verified) or `⚙✗`. Config gains a `state` block (`typeName`, `package`)
-naming the struct whose fields become the `VARIABLES`.
+flows into `model.json` and the viewer like a hand-written one. The badge is
+honest about the strength of the check: `⚙✓` **behavioral** (TLC checked an
+active invariant against real value transitions), `⚙~` **well-formed** (parses
+and holds, but transitions carry no value semantics — a weak claim), or `⚙✗`
+unverified. Config gains a `state` block (`typeName`, `package`) naming the
+struct whose fields become the `VARIABLES`.
 
 What it does **not** do, by design: invent. A handler writing a field whose type
 can't be finitely modelled (a map, slice, struct) keeps that field `UNCHANGED`
@@ -101,6 +106,27 @@ fields change, not *how* (the new value is nondeterministic within its bound), s
 "verified" remains a bounded claim — *the invariants hold across the modelled
 state space* — not a proof the code is correct. Refining a transition's exact
 value, or modelling a map/slice field, is the human's remaining job.
+
+## Run it on any repo (including itself)
+
+The default mode looks for a *sim-shaped* codebase (a fault catalogue, op table,
+`recordFault` calls). Point it at a repo without those — including `ast_dst`
+itself — and it honestly finds nothing. The `structure` mode instead extracts the
+**generic** shape of any Go module and renders it in the same viewer:
+
+```bash
+cd golang
+go run ./cmd/astdst structure --root . --out /tmp/structure.json
+# astdst structure: 3 packages, 102 functions, 35 types, 24 vars/consts, 125 edges
+```
+
+It maps three disjoint Go declaration kinds onto the viewer's columns:
+**functions** (with their signatures and body weight), **types** (each function
+links to the types its signature names), and each **package** grouping its
+package-level **vars & consts**. No sim config is needed — just `--root` (add
+`--exported-only` to drop unexported declarations). Selecting a function
+highlights the types it references; the viewer relabels its columns from the
+`meta` block the model carries (DST models omit it, so that path is unchanged).
 
 ## Use the viewer
 

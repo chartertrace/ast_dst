@@ -39,9 +39,11 @@ export interface SpecRef {
   checked: boolean;
   loc?: Loc;
   // Provenance: set when the spec was machine-generated and TLC-verified
-  // (see the Go `gen` package). Absent for hand-written specs.
+  // (see the Go `gen` package). Absent for hand-written specs. `behavioral`
+  // distinguishes a meaningful check from a merely well-formed one.
   generated?: boolean;
   verified?: boolean;
+  behavioral?: boolean;
 }
 
 // One invariant declared in a TLA+ specification.
@@ -56,6 +58,7 @@ export interface SpecInvariant {
   // model-checked the spec clean; `tlcStates`/`tlcDepth` describe that search.
   generated?: boolean;
   verified?: boolean;
+  behavioral?: boolean;
   tlcStates?: number;
   tlcDepth?: number;
 }

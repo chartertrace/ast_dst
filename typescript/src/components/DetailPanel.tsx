@@ -16,6 +16,7 @@ interface SpecView {
   loc?: Loc;
   generated?: boolean;
   verified?: boolean;
+  behavioral?: boolean;
   tlcStates?: number;
   tlcDepth?: number;
 }
@@ -85,7 +86,11 @@ export function DetailPanel({ model, selected, onClear }: Props) {
  */
 function SpecBlock({ spec }: { spec: SpecView }) {
   const badge = specBadge(spec.status);
-  const gen = genBadge(spec.generated ? { name: spec.name ?? "", specFile: "", checked: false, generated: spec.generated, verified: spec.verified } : undefined);
+  const gen = genBadge(
+    spec.generated
+      ? { name: spec.name ?? "", specFile: "", checked: false, generated: spec.generated, verified: spec.verified, behavioral: spec.behavioral }
+      : undefined,
+  );
   return (
     <div className="dstast-spec-block">
       <div className="dstast-spec-head">
@@ -159,6 +164,7 @@ function resolve(model: DstModel, nodeId: string): Detail | null {
           loc: inv.spec?.loc,
           generated: full?.generated ?? inv.spec?.generated,
           verified: full?.verified ?? inv.spec?.verified,
+          behavioral: full?.behavioral ?? inv.spec?.behavioral,
           tlcStates: full?.tlcStates,
           tlcDepth: full?.tlcDepth,
         };
