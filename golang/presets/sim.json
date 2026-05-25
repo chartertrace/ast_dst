@@ -1,0 +1,41 @@
+{
+  "root": "../../primary-server/sim",
+  "packages": ["catalog", "engine", "state"],
+
+  "faults": {
+    "structSliceVar": "Faults",
+    "idField": "0",
+    "labelField": "1",
+    "enumType": "FaultType",
+    "enumSkip": ["FaultNone", "NumFaultTypes"],
+    "nameMapVar": "faultNames"
+  },
+
+  "invariants": {
+    "structSliceVar": "Invariants",
+    "idField": "ID",
+    "labelField": "Label",
+    "groupFromIDPrefix": true,
+    "docFuncPattern": "Check{Title}{Num}"
+  },
+
+  "operations": {
+    "tableVar": "opTable",
+    "weightsFunc": "initWeights",
+    "weightsVar": "opWeights",
+    "namePrefix": "op",
+    "traceCall": "recordFault",
+    "traceArgIndex": 0
+  },
+
+  "tla": {
+    "specDir": "../docs/tla",
+    "cfgFile": "PayoutFlow.cfg",
+    "matchByLabel": true
+  },
+
+  "state": {
+    "typeName": "StateServer",
+    "package": "state"
+  }
+}

@@ -1,0 +1,223 @@
+/* Self-contained styles for the DST AST viewer. Everything is namespaced
+   under .dstast and driven by CSS variables, so it drops into any host without
+   colliding with or depending on the host's Tailwind/global CSS. Override the
+   variables on .dstast to retheme. */
+
+.dstast {
+  --dstast-bg: #0f1115;
+  --dstast-panel: #171a21;
+  --dstast-panel-2: #1d212b;
+  --dstast-border: #2a2f3a;
+  --dstast-text: #e6e9ef;
+  --dstast-muted: #9aa3b2;
+  --dstast-accent: #6ea8fe;
+  --dstast-op: #7dd3fc;
+  --dstast-fault: #fca5a5;
+  --dstast-inv: #86efac;
+  --dstast-truth: #c4b5fd;
+  --dstast-dim: 0.28;
+  --dstast-validated: #86efac;
+  --dstast-unchecked: #fbbf24;
+  --dstast-unspecified: #6b7280;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 16px;
+  background: var(--dstast-bg);
+  color: var(--dstast-text);
+  font: 13px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.dstast *,
+.dstast *::before,
+.dstast *::after { box-sizing: border-box; }
+
+.dstast-header {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+.dstast-title { font-size: 15px; font-weight: 650; letter-spacing: 0.2px; }
+.dstast-sub { color: var(--dstast-muted); font-size: 12px; }
+.dstast-stats { display: flex; gap: 14px; margin-left: auto; flex-wrap: wrap; }
+.dstast-stat b { color: var(--dstast-text); font-variant-numeric: tabular-nums; }
+.dstast-stat span { color: var(--dstast-muted); margin-left: 4px; }
+
+.dstast-columns {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr 1.3fr;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+@media (max-width: 900px) {
+  .dstast-columns { grid-template-columns: 1fr; }
+}
+
+.dstast-col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--dstast-panel);
+  border: 1px solid var(--dstast-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.dstast-col-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--dstast-border);
+  font-weight: 600;
+}
+.dstast-col-head .dstast-count { color: var(--dstast-muted); font-weight: 400; }
+.dstast-col-body { overflow: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+
+.dstast-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+.dstast-dot.op { background: var(--dstast-op); }
+.dstast-dot.fault { background: var(--dstast-fault); }
+.dstast-dot.inv { background: var(--dstast-inv); }
+.dstast-dot.truth { background: var(--dstast-truth); }
+
+.dstast-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--dstast-panel-2);
+  cursor: pointer;
+  transition: border-color 0.12s, opacity 0.12s, transform 0.06s;
+}
+.dstast-row:hover { border-color: var(--dstast-border); }
+.dstast-row.selected { border-color: var(--dstast-accent); }
+.dstast-row.dim { opacity: var(--dstast-dim); }
+.dstast-row-top { display: flex; align-items: center; gap: 8px; }
+.dstast-row-name { font-weight: 550; }
+.dstast-row-id { color: var(--dstast-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.dstast-row-note { color: var(--dstast-muted); font-size: 11.5px; }
+
+.dstast-weight {
+  position: relative;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--dstast-border);
+  margin-left: auto;
+  width: 64px;
+  flex: 0 0 auto;
+}
+.dstast-weight > i { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--dstast-op); }
+.dstast-weight-label { color: var(--dstast-muted); font-size: 11px; font-variant-numeric: tabular-nums; min-width: 30px; text-align: right; }
+
+.dstast-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.dstast-chip {
+  font-size: 10.5px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--dstast-border);
+  color: var(--dstast-fault);
+  background: color-mix(in srgb, var(--dstast-fault) 12%, transparent);
+  white-space: nowrap;
+}
+.dstast-chip.muted { color: var(--dstast-muted); background: transparent; }
+
+.dstast-truth-group { display: flex; flex-direction: column; }
+.dstast-truth-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+.dstast-truth-head:hover { background: var(--dstast-panel-2); }
+.dstast-truth-head.selected { background: color-mix(in srgb, var(--dstast-truth) 16%, transparent); }
+.dstast-truth-head .dstast-count { color: var(--dstast-muted); margin-left: auto; font-size: 11px; }
+.dstast-caret { width: 12px; color: var(--dstast-muted); transition: transform 0.12s; }
+.dstast-caret.open { transform: rotate(90deg); }
+.dstast-truth-items { display: flex; flex-direction: column; gap: 5px; padding: 4px 0 8px 16px; }
+
+/* Spec-coverage badges: ✓ validated, ⚠ specified-but-unchecked, ○ unspecified. */
+.dstast-spec-badge {
+  flex: 0 0 auto;
+  width: 15px;
+  text-align: center;
+  font-size: 11px;
+  line-height: 1;
+}
+.dstast-spec-badge.validated { color: var(--dstast-validated); }
+.dstast-spec-badge.unchecked-spec { color: var(--dstast-unchecked); }
+.dstast-spec-badge.unspecified { color: var(--dstast-unspecified); }
+/* Provenance badges for machine-generated specs: ⚙✓ verified, ⚙✗ unverified. */
+.dstast-spec-badge.gen-verified { color: var(--dstast-validated); width: auto; }
+.dstast-spec-badge.gen-unverified { color: var(--dstast-unchecked); width: auto; }
+.dstast-spec-prov {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--dstast-muted);
+}
+
+/* Formal-spec block in the detail panel: TLA+ predicate beside the Go checker. */
+.dstast-spec-block {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--dstast-border);
+}
+.dstast-spec-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dstast-spec-status { color: var(--dstast-muted); font-size: 11.5px; }
+.dstast-spec-name {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11.5px;
+  color: var(--dstast-inv);
+}
+.dstast-spec-pred {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  background: var(--dstast-bg);
+  border: 1px solid var(--dstast-border);
+  border-radius: 8px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--dstast-text);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+.dstast-detail {
+  border: 1px solid var(--dstast-border);
+  background: var(--dstast-panel);
+  border-radius: 10px;
+  padding: 12px 14px;
+  min-height: 96px;
+}
+.dstast-detail-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.dstast-detail-kind { text-transform: uppercase; letter-spacing: 0.6px; font-size: 10px; color: var(--dstast-muted); }
+.dstast-detail-title { font-weight: 650; font-size: 14px; }
+.dstast-detail-doc { color: var(--dstast-text); white-space: pre-wrap; }
+.dstast-detail-meta { color: var(--dstast-muted); font-size: 11.5px; margin-top: 8px; display: flex; gap: 14px; flex-wrap: wrap; }
+.dstast-detail-loc { font-family: ui-monospace, "SF Mono", Menlo, monospace; color: var(--dstast-accent); }
+.dstast-empty { color: var(--dstast-muted); font-style: italic; }
+.dstast-clear {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--dstast-muted);
+  background: transparent;
+  border: 1px solid var(--dstast-border);
+  border-radius: 6px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.dstast-clear:hover { color: var(--dstast-text); border-color: var(--dstast-accent); }

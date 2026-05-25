@@ -1,0 +1,11 @@
+{
+  // Node tooling: the model.json-driven generators (src/gen) and the Vite
+  // config. These run under Node (via tsx / Vite), so they get @types/node.
+  // Files they import from src/ (model/, site/, types) are pulled in and
+  // checked here too; the browser config above checks them without Node types.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["src/gen", "vite.config.ts"]
+}

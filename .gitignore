@@ -1,0 +1,29 @@
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Secrets (astdst generate reads ANTHROPIC_API_KEY)
+.env
+.env.*
+
+# Go
+*.exe
+*.test
+*.out
+/golang/astdst
+# TLA+ toolchain auto-downloaded by `astdst generate`
+tla2tools.jar
+
+# Node / TypeScript (viewer + generators)
+node_modules/
+*.tsbuildinfo
+dist/
+dist-viewer/
+coverage/
+
+# Generator outputs (regenerated from model.json; not committed)
+generated/
+tla-gen/
+site/

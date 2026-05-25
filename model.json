@@ -1,0 +1,2252 @@
+{
+  "generatedAt": "2026-05-25T20:47:01Z",
+  "source": {
+    "simPath": "/Users/jackdunlap/Desktop/CharterTrace - Main/app/primary-server/sim",
+    "filesRead": 42,
+    "toolModule": "astdst"
+  },
+  "truths": [
+    {
+      "name": "SPATIAL",
+      "count": 3
+    },
+    {
+      "name": "TEMPORAL",
+      "count": 3
+    },
+    {
+      "name": "IDENTITY",
+      "count": 4
+    },
+    {
+      "name": "CAUSAL",
+      "count": 3
+    },
+    {
+      "name": "PHYSICS",
+      "count": 2
+    },
+    {
+      "name": "CONTINUITY",
+      "count": 2
+    },
+    {
+      "name": "PAYMENT",
+      "count": 21
+    },
+    {
+      "name": "STATE",
+      "count": 5
+    },
+    {
+      "name": "ECONOMICS",
+      "count": 7
+    }
+  ],
+  "invariants": [
+    {
+      "id": "SPATIAL-1",
+      "label": "H3ProximityAccuracy",
+      "truth": "SPATIAL",
+      "doc": "CheckSpatial1 verifies SPATIAL-1: H3ProximityAccuracy. Ensures H3-based proximity detection matches haversine-based detection. This is a calibration invariant used during the H3 migration to verify accuracy.  Checks: 1. If H3 says \"within 10 miles\", haversine should confirm \u003c 11 miles (10% buffer) 2. If H3 says \"within 5 miles\", haversine should confirm \u003c 5.5 miles 3. If H3 says \"within 1 mile\", haversine should confirm \u003c 1.1 miles  OPTIMIZED: Builds lookup maps once, uses fast distance check for common case.",
+      "loc": {
+        "file": "state/invariants_spatial.go",
+        "line": 22
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "SPATIAL-2",
+      "label": "ProximityStateConsistent",
+      "truth": "SPATIAL",
+      "doc": "CheckSpatial2 verifies SPATIAL-2: ProximityStateConsistent. Ensures proximity state \"at_location\" matches actual driver location in geofence.  Real-world failure this prevents: Driver marked as present when they're not, leading to fraudulent dwell time payouts.  OPTIMIZED: Uses squared distance comparison to avoid sqrt, builds stop lookup once.",
+      "loc": {
+        "file": "state/invariants_spatial.go",
+        "line": 223
+      },
+      "spec": {
+        "name": "ProximityStateConsistent",
+        "specFile": "PayoutFlowV3.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/PayoutFlowV3.tla",
+          "line": 301
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "SPATIAL-3",
+      "label": "ShadowTrackingAccuracy",
+      "truth": "SPATIAL",
+      "doc": "CheckSpatial3 verifies SPATIAL-3: ShadowTrackingAccuracy. Ensures shadow tracking events are only generated for valid GPS gaps and that confidence scores are calculated correctly.  Real-world failure this prevents: 1. False positive shadow activities for small gaps (\u003c10 minutes) 2. Shadow activities with incorrect confidence (timing mismatch) 3. Activities generated for impossible routes (cells too far apart)  Checks: - All generated shadow activities have gaps \u003e= MinGapTicks - All generated shadow activities have gaps \u003c= MaxGapTicks - All generated shadow activities have confidence \u003e= 0.6 - No shadow activities generated for gaps \u003c MinGapTicks",
+      "loc": {
+        "file": "state/invariants_movement.go",
+        "line": 287
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "TEMPORAL-1",
+      "label": "NoFutureTimestamps",
+      "truth": "TEMPORAL",
+      "doc": "CheckTemporal1 verifies TEMPORAL-1: NoFutureTimestamps. Ping timestamps must not be in the future relative to the server clock. This catches clock manipulation attacks.",
+      "loc": {
+        "file": "state/invariants_lifecycle.go",
+        "line": 121
+      },
+      "spec": {
+        "name": "NoFutureTimestamps",
+        "specFile": "PayoutFlowV3.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/PayoutFlowV3.tla",
+          "line": 319
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "TEMPORAL-2",
+      "label": "NoExcessiveClockDrift",
+      "truth": "TEMPORAL",
+      "doc": "CheckTemporal2 verifies TEMPORAL-2: NoExcessiveClockDrift. Ensures client timestamps don't drift too far from server clock.  Real-world failure this prevents: Clock manipulation attacks where malicious clients send timestamps in the past/future to game dwell time calculations.",
+      "loc": {
+        "file": "state/invariants_movement.go",
+        "line": 14
+      },
+      "spec": {
+        "name": "NoExcessiveClockDrift",
+        "specFile": "PayoutFlowV3.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/PayoutFlowV3.tla",
+          "line": 324
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "TEMPORAL-3",
+      "label": "DwellTimeValid",
+      "truth": "TEMPORAL",
+      "doc": "CheckTemporal3 verifies TEMPORAL-3: DwellTimeValid. Ensures completed stops have valid dwell times with sufficient pings.  Real-world failure this prevents: Drive-by fraud where a driver briefly enters a geofence without actually performing the stop.",
+      "loc": {
+        "file": "state/invariants_movement.go",
+        "line": 46
+      },
+      "spec": {
+        "name": "DwellTimeValid",
+        "specFile": "PayoutFlowV3.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/PayoutFlowV3.tla",
+          "line": 329
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "IDENTITY-1",
+      "label": "PayoutFollowsDriver",
+      "truth": "IDENTITY",
+      "doc": "CheckIdentity1 verifies IDENTITY-1: PayoutFollowsDriver. A shipment's payout must go to the driver who was assigned when completed. This prevents payout misdirection after driver reassignment.",
+      "loc": {
+        "file": "state/invariants_lifecycle.go",
+        "line": 147
+      },
+      "spec": {
+        "name": "PayoutFollowsDriver",
+        "specFile": "PayoutFlowV3.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/PayoutFlowV3.tla",
+          "line": 352
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "IDENTITY-2",
+      "label": "OnlyAssignedDriverCompletes",
+      "truth": "IDENTITY",
+      "doc": "CheckIdentity2 verifies IDENTITY-2: OnlyAssignedDriverCompletes. Ensures stops are only completed by drivers who were assigned to the shipment.  Real-world failure this prevents: Driver impersonation attacks or system bugs that allow an unassigned driver to complete another driver's stops.",
+      "loc": {
+        "file": "state/invariants_movement.go",
+        "line": 81
+      },
+      "spec": {
+        "name": "OnlyAssignedDriverCompletes",
+        "specFile": "PayoutFlowV3.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/PayoutFlowV3.tla",
+          "line": 361
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "IDENTITY-3",
+      "label": "AssignmentHistoryComplete",
+      "truth": "IDENTITY",
+      "doc": "CheckIdentity3 verifies IDENTITY-3: AssignmentHistoryComplete. Ensures the current driver matches the last assignment in history.  Real-world failure this prevents: Inconsistent state where shipment shows one driver but assignment history shows another, causing payout confusion.",
+      "loc": {
+        "file": "state/invariants_movement.go",
+        "line": 116
+      },
+      "spec": {
+        "name": "AssignmentHistoryComplete",
+        "specFile": "PayoutFlowV3.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/PayoutFlowV3.tla",
+          "line": 369
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "IDENTITY-4",
+      "label": "SingleActiveShipmentPerDriver",
+      "truth": "IDENTITY",
+      "doc": "CheckIdentity4 verifies IDENTITY-4: SingleActiveShipmentPerDriver. Ensures that each driver has at most ONE in_progress shipment at any time.  TLA+ Specification:  ∀ d ∈ Drivers: |{s ∈ Shipments : shipmentDriver[s] = d ∧ shipmentStatus[s] = \"in_progress\"}| ≤ 1  This invariant prevents: - A driver from accepting a new shipment while already driving - Concurrent delivery scenarios which are physically impossible - Duplicate payout situations where one driver completes multiple shipments  In the real world, a driver can only be in one place at a time. This invariant is critical for future Stripe sandbox integration where each driver has a corresponding Connect account.",
+      "loc": {
+        "file": "state/invariants_movement.go",
+        "line": 355
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "CAUSAL-1",
+      "label": "TerminalStatesAreFinal",
+      "truth": "CAUSAL",
+      "doc": "CheckCausal1 verifies CAUSAL-1: TerminalStatesAreFinal. Completed or cancelled shipments must never change status again. This prevents the scenario where a completed shipment is somehow reopened.",
+      "loc": {
+        "file": "state/invariants_lifecycle.go",
+        "line": 18
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "CAUSAL-2",
+      "label": "StopOrderingRespected",
+      "truth": "CAUSAL",
+      "doc": "CheckCausal2 verifies CAUSAL-2: StopOrderingRespected. Ensures stops are completed in sequence order (lower sequence completed first).  Real-world failure this prevents: Out-of-order stop completion that violates pickup-before-delivery constraints or multi-stop routing logic.",
+      "loc": {
+        "file": "state/invariants_movement.go",
+        "line": 160
+      },
+      "spec": {
+        "name": "StopOrderingRespected",
+        "specFile": "PayoutFlowV3.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/PayoutFlowV3.tla",
+          "line": 388
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "CAUSAL-3",
+      "label": "ShipmentRequiresAllStops",
+      "truth": "CAUSAL",
+      "doc": "CheckCausal3 verifies CAUSAL-3: ShipmentRequiresAllStops. Ensures completed shipments have all their stops completed.  Real-world failure this prevents: Premature shipment completion that skips required stops, leading to missing deliveries and incorrect payouts.",
+      "loc": {
+        "file": "state/invariants_movement.go",
+        "line": 188
+      },
+      "spec": {
+        "name": "ShipmentRequiresAllStops",
+        "specFile": "PayoutFlowV3.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/PayoutFlowV3.tla",
+          "line": 394
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "PHYSICS-1",
+      "label": "SpeedPlausibility",
+      "truth": "PHYSICS",
+      "doc": "CheckPhysics1 verifies PHYSICS-1: SpeedPlausibility. No sequential pings should exceed MaxSpeedMPH (165 mph). This catches teleportation attacks in the simulator.",
+      "loc": {
+        "file": "state/invariants_lifecycle.go",
+        "line": 44
+      },
+      "spec": {
+        "name": "SpeedPlausibility",
+        "specFile": "PayoutFlowV3.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/PayoutFlowV3.tla",
+          "line": 440
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "PHYSICS-2",
+      "label": "NoBilocation",
+      "truth": "PHYSICS",
+      "doc": "CheckPhysics2 verifies PHYSICS-2: NoBilocation. Pings at the same clock tick must be at the same location (within GPS tolerance). This detects multi-device attacks where pings arrive concurrently from different locations.  OPTIMIZED: Zero allocation - checks consecutive pings with same timestamp inline.",
+      "loc": {
+        "file": "state/invariants_lifecycle.go",
+        "line": 71
+      },
+      "spec": {
+        "name": "NoBilocation",
+        "specFile": "PayoutFlowV3.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/PayoutFlowV3.tla",
+          "line": 449
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "CONTINUITY-1",
+      "label": "HeartbeatRequired",
+      "truth": "CONTINUITY",
+      "doc": "CheckContinuity1 verifies CONTINUITY-1: HeartbeatRequired. Ensures active drivers have recent pings (within MaxPingGap ticks).  Real-world failure this prevents: \"Ghost\" drivers who start a shipment but then go offline, making tracking impossible and causing dispatch confusion.",
+      "loc": {
+        "file": "state/invariants_movement.go",
+        "line": 218
+      },
+      "spec": {
+        "name": "HeartbeatRequired",
+        "specFile": "PayoutFlowV3.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/PayoutFlowV3.tla",
+          "line": 467
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "CONTINUITY-2",
+      "label": "PingDensityRequired",
+      "truth": "CONTINUITY",
+      "doc": "CheckContinuity2 verifies CONTINUITY-2: PingDensityRequired. Ensures completed stops have sufficient ping density within geofence.  Real-world failure this prevents: Low-quality location data that can't reliably establish presence, leading to disputed dwell time claims.",
+      "loc": {
+        "file": "state/invariants_movement.go",
+        "line": 253
+      },
+      "spec": {
+        "name": "PingDensityRequired",
+        "specFile": "PayoutFlowV3.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/PayoutFlowV3.tla",
+          "line": 473
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "PAYMENT-1",
+      "label": "NoNegativeBalances",
+      "truth": "PAYMENT",
+      "loc": {
+        "file": "state/invariants_payment.go",
+        "line": 9
+      },
+      "spec": {
+        "name": "NoNegativeBalances",
+        "specFile": "PayoutFlow.tla",
+        "checked": true,
+        "loc": {
+          "file": "../docs/tla/PayoutFlow.tla",
+          "line": 118
+        }
+      },
+      "specStatus": "validated"
+    },
+    {
+      "id": "PAYMENT-2",
+      "label": "NoMoneyWithoutRecord",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment2 verifies PAYMENT-2: NoMoneyWithoutRecord. FIX: Now uses ShipmentID for matching when available, to prevent false positives when same driver has multiple payouts of the same amount.",
+      "loc": {
+        "file": "state/invariants_payment.go",
+        "line": 25
+      },
+      "spec": {
+        "name": "NoMoneyWithoutRecord",
+        "specFile": "PayoutFlow.tla",
+        "checked": true,
+        "loc": {
+          "file": "../docs/tla/PayoutFlow.tla",
+          "line": 123
+        }
+      },
+      "specStatus": "validated"
+    },
+    {
+      "id": "PAYMENT-3",
+      "label": "NoRecordWithoutCompletion",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment3 verifies PAYMENT-3: NoRecordWithoutCompletion.",
+      "loc": {
+        "file": "state/invariants_payment.go",
+        "line": 82
+      },
+      "spec": {
+        "name": "NoRecordWithoutCompletion",
+        "specFile": "PayoutFlow.tla",
+        "checked": true,
+        "loc": {
+          "file": "../docs/tla/PayoutFlow.tla",
+          "line": 133
+        }
+      },
+      "specStatus": "validated"
+    },
+    {
+      "id": "PAYMENT-4",
+      "label": "NoDoublePayouts",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment4 verifies PAYMENT-4: NoDoublePayouts.",
+      "loc": {
+        "file": "state/invariants_payment.go",
+        "line": 108
+      },
+      "spec": {
+        "name": "NoDoublePayouts",
+        "specFile": "PayoutFlow.tla",
+        "checked": true,
+        "loc": {
+          "file": "../docs/tla/PayoutFlow.tla",
+          "line": 140
+        }
+      },
+      "specStatus": "validated"
+    },
+    {
+      "id": "PAYMENT-5",
+      "label": "NoUnpaidCompletedWork",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment5 verifies PAYMENT-5: NoUnpaidCompletedWork.",
+      "loc": {
+        "file": "state/invariants_payment.go",
+        "line": 131
+      },
+      "spec": {
+        "name": "NoUnpaidCompletedWork",
+        "specFile": "PayoutFlow.tla",
+        "checked": true,
+        "loc": {
+          "file": "../docs/tla/PayoutFlow.tla",
+          "line": 147
+        }
+      },
+      "specStatus": "validated"
+    },
+    {
+      "id": "PAYMENT-6",
+      "label": "BalanceImpliesCredit",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment6 verifies PAYMENT-6: BalanceImpliesCredit.",
+      "loc": {
+        "file": "state/invariants_payment.go",
+        "line": 163
+      },
+      "spec": {
+        "name": "BalanceImpliesCredit",
+        "specFile": "PayoutFlow.tla",
+        "checked": true,
+        "loc": {
+          "file": "../docs/tla/PayoutFlow.tla",
+          "line": 157
+        }
+      },
+      "specStatus": "validated"
+    },
+    {
+      "id": "PAYMENT-7",
+      "label": "NoRestrictedWithdrawals",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment7 verifies PAYMENT-7: NoRestrictedWithdrawals.",
+      "loc": {
+        "file": "state/invariants_payment.go",
+        "line": 191
+      },
+      "spec": {
+        "name": "NoRestrictedWithdrawals",
+        "specFile": "PayoutFlow.tla",
+        "checked": true,
+        "loc": {
+          "file": "../docs/tla/PayoutFlow.tla",
+          "line": 166
+        }
+      },
+      "specStatus": "validated"
+    },
+    {
+      "id": "PAYMENT-8",
+      "label": "IdempotencyRespected",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment8 verifies PAYMENT-8: IdempotencyRespected.",
+      "loc": {
+        "file": "state/invariants_payment.go",
+        "line": 214
+      },
+      "spec": {
+        "name": "IdempotencyRespected",
+        "specFile": "PayoutFlow.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/PayoutFlow.tla",
+          "line": 174
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "PAYMENT-9",
+      "label": "NoIdempotencyKeyReuse",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment9 verifies PAYMENT-9: NoIdempotencyKeyReuse. Expired keys must not be reused - this is a safety violation.",
+      "loc": {
+        "file": "state/invariants_payment.go",
+        "line": 249
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "PAYMENT-10",
+      "label": "NoInvalidStateTransitions",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment10 verifies PAYMENT-10: NoInvalidStateTransitions. All recorded state transitions must be valid according to state machine.",
+      "loc": {
+        "file": "state/invariants_payment.go",
+        "line": 263
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "PAYMENT-11",
+      "label": "DualStateConsistency",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment11 verifies PAYMENT-11: DualStateConsistency. Our transfer records must eventually match Stripe reality (except during known crash scenarios).",
+      "loc": {
+        "file": "state/invariants_payment.go",
+        "line": 278
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "PAYMENT-12",
+      "label": "NoOrphanedPending",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment12 verifies PAYMENT-12: NoOrphanedPending. Transfers cannot remain in \"pending\" state indefinitely - they must resolve. Uses logical clock ticks for deterministic simulation.  Real-world failure this prevents: Stripe webhook never arrives, money stuck in limbo forever. Driver can't withdraw, reconciliation never runs.",
+      "loc": {
+        "file": "state/invariants_payment.go",
+        "line": 306
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "PAYMENT-13",
+      "label": "NoStaleTransfers",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment13 verifies PAYMENT-13: NoStaleTransfers. Transfers must not remain in pending state beyond a reasonable time. Unlike PAYMENT-12 which checks for reconciliation gaps, PAYMENT-13 checks for truly abandoned transfers that have no corresponding Stripe reality (never processed).  Real-world failure this prevents: Transfer created but never submitted to Stripe, funds stuck in limbo, no webhook ever arrives because Stripe never got the request.",
+      "loc": {
+        "file": "state/invariants_payment.go",
+        "line": 361
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "PAYMENT-14",
+      "label": "SumOfPartsEqualsWhole",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment14 verifies PAYMENT-14: SumOfPartsEqualsWhole. The sum of all driver balances must equal the net of all ledger entries. This catches rounding errors, double-counting, and missed entries.  Formula: Sum(driver_balances.available + pending) == Sum(ledger credits) - Sum(ledger debits)  Real-world failure this prevents: Rounding errors accumulate over thousands of transactions. A 1-cent error per transaction becomes $100k/year at scale.",
+      "loc": {
+        "file": "state/invariants_payment.go",
+        "line": 410
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "PAYMENT-15",
+      "label": "NoPayoutsToInvalidAccounts",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment15 verifies PAYMENT-15: NoPayoutsToInvalidAccounts. No payouts should be created or pending for drivers with invalid external accounts.  TLA+ Specification:  ∀ t ∈ stripeTransfers: t.status = \"pending\" ⇒ driverExternalAccount[t.driver] = \"valid\"",
+      "loc": {
+        "file": "state/invariants_financial_ext.go",
+        "line": 16
+      },
+      "spec": {
+        "name": "NoPayoutsToInvalidAccounts",
+        "specFile": "ExternalAccountExtension.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/ExternalAccountExtension.tla",
+          "line": 206
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "PAYMENT-16",
+      "label": "ExpiredCardBlocksPayout",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment16 verifies PAYMENT-16: ExpiredCardBlocksPayout. Payouts should not be pending for drivers with expired cards.  TLA+ Specification:  ∀ t ∈ stripeTransfers: t.status = \"pending\" ∧ clock \u003e= driverCardExpiry[t.driver] ⇒ driverExternalAccount[t.driver] ≠ \"valid\"",
+      "loc": {
+        "file": "state/invariants_financial_ext.go",
+        "line": 47
+      },
+      "spec": {
+        "name": "ExpiredCardBlocksPayout",
+        "specFile": "ExternalAccountExtension.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/ExternalAccountExtension.tla",
+          "line": 212
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "PAYMENT-17",
+      "label": "InstantPayoutEligibility",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment17 verifies PAYMENT-17: InstantPayoutEligibility. Instant payouts should only be created for eligible drivers.  TLA+ Specification:  ∀ t ∈ stripeTransfers: t.status = \"pending\" ∧ t.method = \"instant\" ⇒ driverInstantEligible[t.driver] ∧ driverCardNetwork[t.driver] ∈ {\"visa\", \"mastercard\"} ∧ driverExternalAccount[t.driver] = \"valid\"",
+      "loc": {
+        "file": "state/invariants_financial_ext.go",
+        "line": 80
+      },
+      "spec": {
+        "name": "InstantPayoutEligibility",
+        "specFile": "ExternalAccountExtension.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/ExternalAccountExtension.tla",
+          "line": 220
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "PAYMENT-18",
+      "label": "InstantFailureFallback",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment18 verifies PAYMENT-18: InstantFailureFallback. Failed instant payouts for specific codes should have standard fallback scheduled.  TLA+ Specification:  ∀ f ∈ payoutFailures: f.failureCode ∈ {\"instant_payouts_unsupported\", \"daily_limit_exceeded\", \"network_decline\"} ⇒ ∃ retry ∈ pendingRetries: retry.transferId = f.transferId ∧ retry.method = \"standard\"",
+      "loc": {
+        "file": "state/invariants_financial_ext.go",
+        "line": 107
+      },
+      "spec": {
+        "name": "InstantFailureFallback",
+        "specFile": "ExternalAccountExtension.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/ExternalAccountExtension.tla",
+          "line": 229
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "PAYMENT-19",
+      "label": "CardReplacementHandling",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment19 verifies PAYMENT-19: CardReplacementHandling. Pending payouts should be voided when the card is replaced.  TLA+ Specification:  ∀ t ∈ stripeTransfers: t.status = \"pending\" ∧ driverExternalAccount[t.driver] = \"replaced\" ⇒ t.status' ∈ {\"voided\", \"failed\"}",
+      "loc": {
+        "file": "state/invariants_financial_ext.go",
+        "line": 146
+      },
+      "spec": {
+        "name": "CardReplacementHandling",
+        "specFile": "ExternalAccountExtension.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/ExternalAccountExtension.tla",
+          "line": 237
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "PAYMENT-20",
+      "label": "NetworkBlackoutRespected",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment20 verifies PAYMENT-20: NetworkBlackoutRespected. No instant payout may be in flight while the destination card network is in a blackout window. Standard payouts and already-settled transfers are exempt.  TLA+ Specification:  ∀ t ∈ stripeTransfers: t.status = \"pending\" ∧ t.method = \"instant\" ⇒ ¬IsBlackoutWindow(driverCardNetwork[t.driver], clock)",
+      "loc": {
+        "file": "state/invariants_financial_ext.go",
+        "line": 177
+      },
+      "spec": {
+        "name": "NetworkBlackoutRespected",
+        "specFile": "ExternalAccountExtension.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/ExternalAccountExtension.tla",
+          "line": 244
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "PAYMENT-21",
+      "label": "RetryBudgetRespected",
+      "truth": "PAYMENT",
+      "doc": "CheckPayment21 verifies PAYMENT-21: RetryBudgetRespected. Payouts that exhaust retries should have permanent failure recorded.  TLA+ Specification:  ∀ f ∈ payoutFailures: |{r ∈ pendingRetries: r.transferId = f.transferId}| \u003e= MAX_RETRIES ⇒ ∃ entry ∈ ledgerEntries: entry.type = \"payout_failed\"",
+      "loc": {
+        "file": "state/invariants_financial_ext.go",
+        "line": 206
+      },
+      "spec": {
+        "name": "RetryBudgetRespected",
+        "specFile": "ExternalAccountExtension.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/ExternalAccountExtension.tla",
+          "line": 252
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "STATE-1",
+      "label": "InProgressRequiresDriver",
+      "truth": "STATE",
+      "doc": "CheckState1 verifies STATE-1: InProgressRequiresDriver. Shipments in 'in_progress' status must have a driver assigned. This prevents orphaned shipments that can never be completed.",
+      "loc": {
+        "file": "state/invariants_lifecycle.go",
+        "line": 180
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "STATE-2",
+      "label": "ExternalAccountConsistency",
+      "truth": "STATE",
+      "doc": "CheckState2 verifies STATE-2: ExternalAccountConsistency. Our external account status should match Stripe's reality.  TLA+ Specification:  ∀ d ∈ Drivers: driverExternalAccount[d] = \"valid\" ⇒ ∃ acct ∈ stripeExternalAccounts: acct.driver = d ∧ acct.status = \"valid\" ∧ acct.expiry \u003e clock",
+      "loc": {
+        "file": "state/invariants_financial_ext.go",
+        "line": 238
+      },
+      "spec": {
+        "name": "ExternalAccountConsistency",
+        "specFile": "ExternalAccountExtension.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/ExternalAccountExtension.tla",
+          "line": 264
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "STATE-3",
+      "label": "PendingPayoutsHaveValidDestination",
+      "truth": "STATE",
+      "doc": "CheckState3 verifies STATE-3: PendingPayoutsHaveValidDestination. All pending payouts should have a valid destination.  TLA+ Specification:  ∀ t ∈ stripeTransfers: t.status = \"pending\" ⇒ driverExternalAccount[t.driver] = \"valid\" ∧ driverAccountStatus[t.driver] = \"active\"",
+      "loc": {
+        "file": "state/invariants_financial_ext.go",
+        "line": 276
+      },
+      "spec": {
+        "name": "PendingPayoutsHaveValidDestination",
+        "specFile": "ExternalAccountExtension.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/ExternalAccountExtension.tla",
+          "line": 271
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "STATE-4",
+      "label": "CardExpiryTracked",
+      "truth": "STATE",
+      "doc": "CheckState4 verifies STATE-4: CardExpiryTracked. Card expiry should be tracked and enforced.  TLA+ Specification:  ∀ d ∈ Drivers: driverCardExpiry[d] \u003e 0 ∧ clock \u003e= driverCardExpiry[d] ⇒ driverExternalAccount[d] ∈ {\"expired\", \"replaced\"}",
+      "loc": {
+        "file": "state/invariants_financial_ext.go",
+        "line": 316
+      },
+      "spec": {
+        "name": "CardExpiryTracked",
+        "specFile": "ExternalAccountExtension.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/ExternalAccountExtension.tla",
+          "line": 278
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "STATE-5",
+      "label": "NoOrphanedPayoutFailures",
+      "truth": "STATE",
+      "doc": "CheckState5 verifies STATE-5: NoOrphanedPayoutFailures. All payout failures should have a handling path.  TLA+ Specification:  ∀ f ∈ payoutFailures: (∃ retry ∈ pendingRetries: retry.transferId = f.transferId) ∨  -- Will retry f.failureCode ∈ TerminalFailures ∨                            -- Permanent failure (∃ entry ∈ ledgerEntries: entry.type = \"payout_failed\")       -- Refunded to balance",
+      "loc": {
+        "file": "state/invariants_financial_ext.go",
+        "line": 342
+      },
+      "spec": {
+        "name": "NoOrphanedPayoutFailures",
+        "specFile": "ExternalAccountExtension.tla",
+        "checked": false,
+        "loc": {
+          "file": "../docs/tla/ExternalAccountExtension.tla",
+          "line": 285
+        }
+      },
+      "specStatus": "unchecked-spec"
+    },
+    {
+      "id": "ECONOMICS-1",
+      "label": "TotalPayoutsCannotExceedRevenue",
+      "truth": "ECONOMICS",
+      "doc": "CheckEconomics1 verifies ECONOMICS-1: TotalPayoutsCannotExceedRevenue. The platform cannot pay out more than it has earned.  TLA+ Specification:  platform.TotalPayoutsCents ≤ platform.TotalRevenueCents",
+      "loc": {
+        "file": "state/invariants_economics.go",
+        "line": 17
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "ECONOMICS-2",
+      "label": "PendingPayoutsWithinFloat",
+      "truth": "ECONOMICS",
+      "doc": "CheckEconomics2 verifies ECONOMICS-2: PendingPayoutsWithinFloat. Cannot have pending payouts exceeding available balance + max allowed float.  TLA+ Specification:  sumPendingPayouts ≤ platform.AvailableBalance + maxFloatExposure",
+      "loc": {
+        "file": "state/invariants_economics.go",
+        "line": 39
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "ECONOMICS-3",
+      "label": "ShipmentRequiresCredit",
+      "truth": "ECONOMICS",
+      "doc": "CheckEconomics3 verifies ECONOMICS-3: ShipmentRequiresCredit. Every in_progress or completed shipment must have a credit reservation.  TLA+ Specification:  ∀ s ∈ Shipments: s.status ∈ {\"in_progress\", \"completed\"} ⇒ ∃ r ∈ Reservations: r.shipmentID = s.id",
+      "loc": {
+        "file": "state/invariants_economics.go",
+        "line": 73
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "ECONOMICS-4",
+      "label": "BrokerCreditsNonNegative",
+      "truth": "ECONOMICS",
+      "doc": "CheckEconomics4 verifies ECONOMICS-4: BrokerCreditsNonNegative. No broker can have negative available credits.  TLA+ Specification:  ∀ b ∈ Brokers: b.CreditsPurchased - b.CreditsUsed - b.CreditsRefunded ≥ 0",
+      "loc": {
+        "file": "state/invariants_economics.go",
+        "line": 91
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "ECONOMICS-5",
+      "label": "PayoutNotExceedShipmentRevenue",
+      "truth": "ECONOMICS",
+      "doc": "CheckEconomics5 verifies ECONOMICS-5: PayoutNotExceedShipmentRevenue. Driver payout cannot exceed credit price (ensures positive margin per shipment).  TLA+ Specification:  payoutCents ≤ economicConstants.CreditPriceCents",
+      "loc": {
+        "file": "state/invariants_economics.go",
+        "line": 109
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "ECONOMICS-6",
+      "label": "RefundNotExceedUnused",
+      "truth": "ECONOMICS",
+      "doc": "CheckEconomics6 verifies ECONOMICS-6: RefundNotExceedUnused. Cannot refund more credits than broker has unused.  TLA+ Specification:  ∀ b ∈ Brokers: b.CreditsRefunded ≤ b.CreditsPurchased - b.CreditsUsed",
+      "loc": {
+        "file": "state/invariants_economics.go",
+        "line": 131
+      },
+      "specStatus": "unspecified"
+    },
+    {
+      "id": "ECONOMICS-7",
+      "label": "MoneyConservation",
+      "truth": "ECONOMICS",
+      "doc": "CheckEconomics7 verifies ECONOMICS-7: MoneyConservation. Total money in the system must be conserved: Inputs = Outputs + Held.  TLA+ Specification:  ∑(broker.CreditsPurchased * CreditPriceCents) = platform.TotalPayouts + platform.TotalRefunds + platform.AvailableBalance + platform.PendingSettlement + ∑(driverBalance.Available + driverBalance.Pending) + ∑((broker.CreditsPurchased - broker.CreditsUsed - broker.CreditsRefunded) * CreditPriceCents)",
+      "loc": {
+        "file": "state/invariants_economics.go",
+        "line": 155
+      },
+      "specStatus": "unspecified"
+    }
+  ],
+  "faults": [
+    {
+      "id": "transfer_fail",
+      "enum": "FaultTransferFail",
+      "label": "Stripe transfer failure",
+      "loc": {
+        "file": "engine/engine_faults.go",
+        "line": 8
+      }
+    },
+    {
+      "id": "crash_after_stripe",
+      "enum": "FaultCrashAfterStripe",
+      "label": "Crash after Stripe call",
+      "loc": {
+        "file": "engine/engine_faults.go",
+        "line": 9
+      }
+    },
+    {
+      "id": "ach_reversal",
+      "enum": "FaultACHReversal",
+      "label": "ACH reversal",
+      "loc": {
+        "file": "engine/engine_faults.go",
+        "line": 10
+      }
+    },
+    {
+      "id": "duplicate_webhook",
+      "enum": "FaultDuplicateWebhook",
+      "label": "Duplicate webhook delivery",
+      "loc": {
+        "file": "engine/engine_faults.go",
+        "line": 11
+      }
+    },
+    {
+      "id": "double_complete",
+      "enum": "FaultDoubleComplete",
+      "label": "Double completion",
+      "loc": {
+        "file": "engine/engine_faults.go",
+        "line": 12
+      }
+    },
+    {
+      "id": "overdraw",
+      "enum": "FaultOverdraw",
+      "label": "Balance overdraw attempt",
+      "loc": {
+        "file": "engine/engine_faults.go",
+        "line": 13
+      }
+    },
+    {
+      "id": "concurrent_withdraw",
+      "enum": "FaultConcurrentWithdraw",
+      "label": "Concurrent withdrawal",
+      "loc": {
+        "file": "engine/engine_faults.go",
+        "line": 14
+      }
+    },
+    {
+      "id": "out_of_order_webhook",
+      "enum": "FaultOutOfOrderWebhook",
+      "label": "Out-of-order webhook",
+      "loc": {
+        "file": "engine/engine_faults.go",
+        "line": 15
+      }
+    },
+    {
+      "id": "partial_write",
+      "enum": "FaultPartialWrite",
+      "label": "Partial write / tx rollback",
+      "loc": {
+        "file": "engine/engine_faults.go",
+        "line": 16
+      }
+    },
+    {
+      "id": "payment_reversed",
+      "enum": "FaultPaymentReversed",
+      "label": "Payment clawback",
+      "doc": "Stripe claws back a completed payout",
+      "loc": {
+        "file": "engine/engine_faults.go",
+        "line": 18
+      }
+    },
+    {
+      "id": "settlement_delayed",
+      "enum": "FaultSettlementDelayed",
+      "label": "Delayed settlement",
+      "doc": "Settlement arrives later than expected",
+      "loc": {
+        "file": "engine/engine_faults.go",
+        "line": 19
+      }
+    },
+    {
+      "id": "credit_race",
+      "enum": "FaultCreditRace",
+      "label": "Broker credit race",
+      "doc": "Multiple shipments try to use same credit",
+      "loc": {
+        "file": "engine/engine_faults.go",
+        "line": 20
+      }
+    },
+    {
+      "id": "refund_during_shipment",
+      "enum": "FaultRefundDuringShipment",
+      "label": "Refund during shipment",
+      "doc": "Broker requests refund while shipment in progress",
+      "loc": {
+        "file": "engine/engine_faults.go",
+        "line": 21
+      }
+    },
+    {
+      "id": "negative_float",
+      "enum": "FaultNegativeFloat",
+      "label": "Float exposure exceeded",
+      "doc": "Attempt to exceed float exposure limit",
+      "loc": {
+        "file": "engine/engine_faults.go",
+        "line": 22
+      }
+    },
+    {
+      "id": "idempotency_expired",
+      "enum": "FaultIdempotencyExpired",
+      "label": "Idempotency key expired",
+      "doc": "FaultIdempotencyExpired models the scenario where a payout's Stripe idempotency key has aged past the 24h replay window. The recovery metadata-search path returning nil is then INDISTINGUISHABLE from \"transfer never created\" — re-issuing risks a duplicate. The production fix (services/business/ledger/payouts.go) routes such payouts to manual review instead of re-queue. Wired into executeOp case 18; the regression catcher is the manual_review terminal state being reached instead of paid (which would re-credit the driver).",
+      "loc": {
+        "file": "engine/engine_faults.go",
+        "line": 31
+      }
+    }
+  ],
+  "operations": [
+    {
+      "index": 0,
+      "handler": "opCreateShipment",
+      "name": "CreateShipment",
+      "weight": 8,
+      "share": 0.08695652173913043,
+      "note": "need entities to work with",
+      "faults": [
+        "FaultCreditRace"
+      ],
+      "loc": {
+        "file": "engine/engine_exec.go",
+        "line": 85
+      }
+    },
+    {
+      "index": 1,
+      "handler": "opAcceptShipment",
+      "name": "AcceptShipment",
+      "weight": 6,
+      "share": 0.06521739130434782,
+      "faults": [],
+      "loc": {
+        "file": "engine/engine_exec.go",
+        "line": 118
+      }
+    },
+    {
+      "index": 2,
+      "handler": "opPostLocation",
+      "name": "PostLocation",
+      "weight": 30,
+      "share": 0.32608695652173914,
+      "note": "builds up state",
+      "faults": [],
+      "loc": {
+        "file": "engine/engine_exec.go",
+        "line": 130
+      }
+    },
+    {
+      "index": 3,
+      "handler": "opCompleteShipment",
+      "name": "CompleteShipment",
+      "weight": 8,
+      "share": 0.08695652173913043,
+      "note": "triggers payouts",
+      "faults": [
+        "FaultDoubleComplete"
+      ],
+      "loc": {
+        "file": "engine/engine_exec.go",
+        "line": 167
+      }
+    },
+    {
+      "index": 4,
+      "handler": "opCancelShipment",
+      "name": "CancelShipment",
+      "weight": 2,
+      "share": 0.021739130434782608,
+      "faults": [],
+      "loc": {
+        "file": "engine/engine_exec.go",
+        "line": 196
+      }
+    },
+    {
+      "index": 5,
+      "handler": "opRequestWithdrawal",
+      "name": "RequestWithdrawal",
+      "weight": 5,
+      "share": 0.05434782608695652,
+      "note": "financial operation",
+      "faults": [
+        "FaultOverdraw"
+      ],
+      "loc": {
+        "file": "engine/engine_exec.go",
+        "line": 212
+      }
+    },
+    {
+      "index": 6,
+      "handler": "opProcessTransferSuccess",
+      "name": "ProcessTransferSuccess",
+      "weight": 3,
+      "share": 0.03260869565217391,
+      "faults": [],
+      "loc": {
+        "file": "engine/engine_exec.go",
+        "line": 231
+      }
+    },
+    {
+      "index": 7,
+      "handler": "opProcessTransferFailure",
+      "name": "ProcessTransferFailure",
+      "weight": 3,
+      "share": 0.03260869565217391,
+      "note": "failure path",
+      "faults": [
+        "FaultTransferFail"
+      ],
+      "loc": {
+        "file": "engine/engine_exec.go",
+        "line": 239
+      }
+    },
+    {
+      "index": 8,
+      "handler": "opCrashAfterStripe",
+      "name": "CrashAfterStripe",
+      "weight": 2,
+      "share": 0.021739130434782608,
+      "note": "orphaned payment",
+      "faults": [
+        "FaultCrashAfterStripe"
+      ],
+      "loc": {
+        "file": "engine/engine_exec.go",
+        "line": 248
+      }
+    },
+    {
+      "index": 9,
+      "handler": "opACHReversal",
+      "name": "ACHReversal",
+      "weight": 2,
+      "share": 0.021739130434782608,
+      "note": "clawback",
+      "faults": [
+        "FaultACHReversal"
+      ],
+      "loc": {
+        "file": "engine/engine_exec.go",
+        "line": 263
+      }
+    },
+    {
+      "index": 10,
+      "handler": "opReconciliation",
+      "name": "Reconciliation",
+      "weight": 3,
+      "share": 0.03260869565217391,
+      "note": "recovery",
+      "faults": [],
+      "loc": {
+        "file": "engine/engine_exec.go",
+        "line": 273
+      }
+    },
+    {
+      "index": 11,
+      "handler": "opDuplicateWebhook",
+      "name": "DuplicateWebhook",
+      "weight": 2,
+      "share": 0.021739130434782608,
+      "note": "idempotency test",
+      "faults": [
+        "FaultDuplicateWebhook"
+      ],
+      "loc": {
+        "file": "engine/engine_exec.go",
+        "line": 277
+      }
+    },
+    {
+      "index": 12,
+      "handler": "opProcessWithdrawalSuccess",
+      "name": "ProcessWithdrawalSuccess",
+      "weight": 3,
+      "share": 0.03260869565217391,
+      "faults": [],
+      "loc": {
+        "file": "engine/engine_exec.go",
+        "line": 288
+      }
+    },
+    {
+      "index": 13,
+      "handler": "opProcessWithdrawalFailure",
+      "name": "ProcessWithdrawalFailure",
+      "weight": 2,
+      "share": 0.021739130434782608,
+      "faults": [],
+      "loc": {
+        "file": "engine/engine_exec.go",
+        "line": 297
+      }
+    },
+    {
+      "index": 14,
+      "handler": "opBrokerPurchaseCredits",
+      "name": "BrokerPurchaseCredits",
+      "weight": 4,
+      "share": 0.043478260869565216,
+      "note": "brokers buy credits",
+      "faults": [
+        "FaultNegativeFloat"
+      ],
+      "loc": {
+        "file": "engine/engine_exec_economics.go",
+        "line": 13
+      }
+    },
+    {
+      "index": 15,
+      "handler": "opBrokerRefund",
+      "name": "BrokerRefund",
+      "weight": 2,
+      "share": 0.021739130434782608,
+      "note": "brokers request refunds",
+      "faults": [
+        "FaultRefundDuringShipment"
+      ],
+      "loc": {
+        "file": "engine/engine_exec_economics.go",
+        "line": 34
+      }
+    },
+    {
+      "index": 16,
+      "handler": "opSettlementArrives",
+      "name": "SettlementArrives",
+      "weight": 3,
+      "share": 0.03260869565217391,
+      "note": "Stripe settlements clear",
+      "faults": [
+        "FaultSettlementDelayed"
+      ],
+      "loc": {
+        "file": "engine/engine_exec_economics.go",
+        "line": 58
+      }
+    },
+    {
+      "index": 17,
+      "handler": "opEconomicTick",
+      "name": "EconomicTick",
+      "weight": 2,
+      "share": 0.021739130434782608,
+      "note": "advance settlement timing",
+      "faults": [],
+      "loc": {
+        "file": "engine/engine_exec_economics.go",
+        "line": 69
+      }
+    },
+    {
+      "index": 18,
+      "handler": "opIdempotencyExpiredReconcile",
+      "name": "IdempotencyExpiredReconcile",
+      "weight": 2,
+      "share": 0.021739130434782608,
+      "note": "past-replay-window guard",
+      "faults": [
+        "FaultIdempotencyExpired"
+      ],
+      "loc": {
+        "file": "engine/engine_exec_economics.go",
+        "line": 77
+      }
+    }
+  ],
+  "specs": [
+    {
+      "name": "BalanceImpliesCredit",
+      "predicate": "\\A d \\in Drivers:\n    driverBalance[d] \u003e 0 =\u003e\n        \\E e \\in ledgerEntries:\n            /\\ e.driver = d\n            /\\ e.type \\in {\"payout\", \"reconciled\"}",
+      "specFile": "PayoutFlow.tla",
+      "checked": true,
+      "doc": "INV-6: Balance Consistency Balance \u003e 0 implies at least one credit entry exists",
+      "loc": {
+        "file": "../docs/tla/PayoutFlow.tla",
+        "line": 157
+      }
+    },
+    {
+      "name": "NoDoublePayouts",
+      "predicate": "\\A s \\in Shipments:\n    Cardinality({e \\in ledgerEntries: e.shipment = s /\\ e.type = \"payout\"}) \u003c= 1",
+      "specFile": "PayoutFlow.tla",
+      "checked": true,
+      "doc": "INV-4: No Double Payouts Each shipment has at most one payout entry",
+      "loc": {
+        "file": "../docs/tla/PayoutFlow.tla",
+        "line": 140
+      }
+    },
+    {
+      "name": "NoMoneyWithoutRecord",
+      "predicate": "\\A payment \\in stripeRealityPaid:\n    \\/ payment \\in stripeRealityReversed  \\* Reversed = forgiven\n    \\/ \\E entry \\in ledgerEntries:\n        /\\ entry.driver = payment.driver\n        /\\ entry.cents = payment.cents\n        /\\ entry.type \\in {\"payout\", \"reconciled\"}",
+      "specFile": "PayoutFlow.tla",
+      "checked": true,
+      "doc": "INV-2: No Money Without Record If Stripe actually paid (and hasn't reversed), we must have a ledger entry",
+      "loc": {
+        "file": "../docs/tla/PayoutFlow.tla",
+        "line": 123
+      }
+    },
+    {
+      "name": "NoNegativeBalances",
+      "predicate": "\\A d \\in Drivers: driverBalance[d] \u003e= 0",
+      "specFile": "PayoutFlow.tla",
+      "checked": true,
+      "doc": "INV-1: No Negative Balances A driver's balance can never go negative",
+      "loc": {
+        "file": "../docs/tla/PayoutFlow.tla",
+        "line": 118
+      }
+    },
+    {
+      "name": "NoRecordWithoutCompletion",
+      "predicate": "\\A entry \\in ledgerEntries:\n    entry.type = \"payout\" =\u003e\n        shipmentState[entry.shipment] = \"completed\"",
+      "specFile": "PayoutFlow.tla",
+      "checked": true,
+      "doc": "INV-3: No Payout Record Without Completion Payout entries only exist for completed shipments",
+      "loc": {
+        "file": "../docs/tla/PayoutFlow.tla",
+        "line": 133
+      }
+    },
+    {
+      "name": "NoRestrictedWithdrawals",
+      "predicate": "\\A w \\in withdrawalRequests:\n    w.status = \"pending\" =\u003e\n        driverAccountStatus[w.driver] = \"active\"",
+      "specFile": "PayoutFlow.tla",
+      "checked": true,
+      "doc": "INV-7: No Withdrawals From Restricted Accounts Suspended/restricted drivers can't have pending withdrawals",
+      "loc": {
+        "file": "../docs/tla/PayoutFlow.tla",
+        "line": 166
+      }
+    },
+    {
+      "name": "NoUnpaidCompletedWork",
+      "predicate": "\\A s \\in Shipments:\n    shipmentState[s] = \"completed\" =\u003e\n        \\E entry \\in ledgerEntries:\n            /\\ entry.shipment = s\n            /\\ entry.driver = shipmentDriver[s]\n            /\\ entry.type = \"payout\"",
+      "specFile": "PayoutFlow.tla",
+      "checked": true,
+      "doc": "INV-5: No Unpaid Completed Work (THE MOST IMPORTANT) Every completed shipment must have a payout entry for the assigned driver. This ensures drivers always get paid for work they've done.",
+      "loc": {
+        "file": "../docs/tla/PayoutFlow.tla",
+        "line": 147
+      }
+    },
+    {
+      "name": "TypeOK",
+      "predicate": "/\\ clock \\in Nat\n/\\ shipmentState \\in [Shipments -\u003e ShipmentStates]\n/\\ shipmentDriver \\in [Shipments -\u003e Drivers]\n/\\ shipmentCompletedAt \\in [Shipments -\u003e Nat]\n/\\ driverBalance \\in [Drivers -\u003e Nat]\n/\\ driverAccountStatus \\in [Drivers -\u003e DriverAccountStates]\n/\\ ledgerEntries \\subseteq [shipment: Shipments, driver: Drivers,\n                             cents: Nat, type: LedgerTypes, createdAt: Nat]\n/\\ stripeTransfers \\subseteq [id: Nat, driver: Drivers, cents: Nat,\n                               status: TransferStatuses,\n                               idempotencyKey: Nat, createdAt: Nat]\n/\\ stripeRealityPaid \\subseteq [driver: Drivers, cents: Nat]\n/\\ stripeRealityReversed \\subseteq [driver: Drivers, cents: Nat]\n/\\ idempotencyKeys \\subseteq [key: Nat, status: IdempotencyStatuses, createdAt: Nat]\n/\\ nextKeyId \\in Nat\n/\\ withdrawalRequests \\subseteq [driver: Drivers, cents: Nat,\n                                  status: WithdrawalStatuses, createdAt: Nat]",
+      "specFile": "PayoutFlow.tla",
+      "checked": true,
+      "loc": {
+        "file": "../docs/tla/PayoutFlow.tla",
+        "line": 93
+      }
+    },
+    {
+      "name": "CardExpiryTracked",
+      "predicate": "\\A d \\in Drivers:\n    /\\ driverCardExpiry[d] \u003e 0\n    /\\ clock \u003e= driverCardExpiry[d]\n    =\u003e driverExternalAccount[d] \\in {\"expired\", \"replaced\"}",
+      "specFile": "ExternalAccountExtension.tla",
+      "checked": false,
+      "doc": "INV-STATE-7: Card expiry is tracked and enforced",
+      "loc": {
+        "file": "../docs/tla/ExternalAccountExtension.tla",
+        "line": 278
+      }
+    },
+    {
+      "name": "CardReplacementHandling",
+      "predicate": "\\A t \\in stripeTransfers:\n    /\\ t.status = \"pending\"\n    /\\ driverExternalAccount[t.driver] = \"replaced\"\n    =\u003e FALSE  \\* Pending transfers should be voided when card is replaced",
+      "specFile": "ExternalAccountExtension.tla",
+      "checked": false,
+      "doc": "INV-PAYMENT-14: Card replacement invalidates pending transfers",
+      "loc": {
+        "file": "../docs/tla/ExternalAccountExtension.tla",
+        "line": 237
+      }
+    },
+    {
+      "name": "ExpiredCardBlocksPayout",
+      "predicate": "\\A t \\in stripeTransfers:\n    /\\ t.status = \"pending\"\n    /\\ clock \u003e= driverCardExpiry[t.driver]\n    =\u003e driverExternalAccount[t.driver] # \"valid\"",
+      "specFile": "ExternalAccountExtension.tla",
+      "checked": false,
+      "doc": "INV-PAYMENT-11: Expired cards must be replaced before payout",
+      "loc": {
+        "file": "../docs/tla/ExternalAccountExtension.tla",
+        "line": 212
+      }
+    },
+    {
+      "name": "ExternalAccountConsistency",
+      "predicate": "\\A d \\in Drivers:\n    driverExternalAccount[d] = \"valid\"\n    =\u003e /\\ stripeExternalAccountStatus[d] = \"valid\"\n       /\\ stripeExternalAccountExpiry[d] \u003e clock",
+      "specFile": "ExternalAccountExtension.tla",
+      "checked": false,
+      "doc": "INV-STATE-5: External account status matches Stripe reality",
+      "loc": {
+        "file": "../docs/tla/ExternalAccountExtension.tla",
+        "line": 264
+      }
+    },
+    {
+      "name": "InstantFailureFallback",
+      "predicate": "\\A f \\in payoutFailures:\n    ShouldFallbackToStandard(f.failureCode, f.method)\n    =\u003e \\E retry \\in pendingRetries:\n        /\\ retry.transferId = f.transferId\n        /\\ retry.method = \"standard\"",
+      "specFile": "ExternalAccountExtension.tla",
+      "checked": false,
+      "doc": "INV-PAYMENT-13: Failed instant must have standard fallback option",
+      "loc": {
+        "file": "../docs/tla/ExternalAccountExtension.tla",
+        "line": 229
+      }
+    },
+    {
+      "name": "InstantPayoutEligibility",
+      "predicate": "\\A t \\in stripeTransfers:\n    /\\ t.status = \"pending\"\n    /\\ t.method = \"instant\"\n    =\u003e /\\ driverInstantEligible[t.driver]\n       /\\ NetworkSupportsInstant(driverCardNetwork[t.driver])\n       /\\ driverExternalAccount[t.driver] = \"valid\"",
+      "specFile": "ExternalAccountExtension.tla",
+      "checked": false,
+      "doc": "INV-PAYMENT-12: Instant payouts only for eligible drivers Note: Assumes stripeTransfers has a 'method' field in extended model",
+      "loc": {
+        "file": "../docs/tla/ExternalAccountExtension.tla",
+        "line": 220
+      }
+    },
+    {
+      "name": "NetworkBlackoutRespected",
+      "predicate": "\\A t \\in stripeTransfers:\n    /\\ t.status = \"pending\"\n    /\\ t.method = \"instant\"\n    /\\ driverCardNetwork[t.driver] = \"discover\"\n    =\u003e ~IsDiscoverBlackout(clock)",
+      "specFile": "ExternalAccountExtension.tla",
+      "checked": false,
+      "doc": "INV-PAYMENT-15: No instant payouts during network blackout windows",
+      "loc": {
+        "file": "../docs/tla/ExternalAccountExtension.tla",
+        "line": 244
+      }
+    },
+    {
+      "name": "NoOrphanedPayoutFailures",
+      "predicate": "\\A f \\in payoutFailures:\n    \\/ \\E retry \\in pendingRetries: retry.transferId = f.transferId  \\* Will retry\n    \\/ IsTerminalFailure(f.failureCode)  \\* Permanent failure\n    \\/ \\E entry \\in ledgerEntries:  \\* Refunded to balance\n        /\\ entry.driver = f.driver\n        /\\ entry.type = \"payout_failed\"",
+      "specFile": "ExternalAccountExtension.tla",
+      "checked": false,
+      "doc": "INV-STATE-8: No orphaned payout failures (all failures have handling path)",
+      "loc": {
+        "file": "../docs/tla/ExternalAccountExtension.tla",
+        "line": 285
+      }
+    },
+    {
+      "name": "NoPayoutsToInvalidAccounts",
+      "predicate": "\\A t \\in stripeTransfers:\n    t.status = \"pending\" =\u003e\n        driverExternalAccount[t.driver] = \"valid\"",
+      "specFile": "ExternalAccountExtension.tla",
+      "checked": false,
+      "doc": "INV-PAYMENT-10: No payouts to invalid external accounts",
+      "loc": {
+        "file": "../docs/tla/ExternalAccountExtension.tla",
+        "line": 206
+      }
+    },
+    {
+      "name": "PendingPayoutsHaveValidDestination",
+      "predicate": "\\A t \\in stripeTransfers:\n    t.status = \"pending\"\n    =\u003e /\\ driverExternalAccount[t.driver] = \"valid\"\n       /\\ driverAccountStatus[t.driver] \\in {\"active\", \"restricted\"}",
+      "specFile": "ExternalAccountExtension.tla",
+      "checked": false,
+      "doc": "INV-STATE-6: Pending payouts have valid destination",
+      "loc": {
+        "file": "../docs/tla/ExternalAccountExtension.tla",
+        "line": 271
+      }
+    },
+    {
+      "name": "RetryBudgetRespected",
+      "predicate": "\\A f \\in payoutFailures:\n    Cardinality({r \\in pendingRetries: r.transferId = f.transferId /\\ r.retryCount \u003e= MAX_RETRIES}) \u003e 0\n    =\u003e \\E entry \\in ledgerEntries:\n        /\\ entry.driver = f.driver\n        /\\ entry.type = \"payout_failed\"",
+      "specFile": "ExternalAccountExtension.tla",
+      "checked": false,
+      "doc": "INV-PAYMENT-16: Retry budget exhausted means permanent failure recorded",
+      "loc": {
+        "file": "../docs/tla/ExternalAccountExtension.tla",
+        "line": 252
+      }
+    },
+    {
+      "name": "IdempotencyRespected",
+      "predicate": "\\A t1, t2 \\in stripeTransfers:\n    (t1.idempotencyKey = t2.idempotencyKey /\\ t1 # t2) =\u003e\n        (t1.status = t2.status /\\ t1.cents = t2.cents)",
+      "specFile": "PayoutFlow.tla",
+      "checked": false,
+      "doc": "INV-8: Idempotency Key Uniqueness No two transfers should share the same unexpired idempotency key (Simplified: transfers with same key should have same outcome)",
+      "loc": {
+        "file": "../docs/tla/PayoutFlow.tla",
+        "line": 174
+      }
+    },
+    {
+      "name": "AssignmentHistoryComplete",
+      "predicate": "\\A s \\in Shipments:\n    Len(driverAssignmentHistory[s]) \u003e= 1 =\u003e\n        /\\ Head(driverAssignmentHistory[s]) \\in Drivers\n        /\\ shipmentDriver[s] = Last(driverAssignmentHistory[s])",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-IDENTITY-3: Driver assignment history is complete",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 369
+      }
+    },
+    {
+      "name": "CancellationCascades",
+      "predicate": "\\A s \\in Shipments:\n    shipmentState[s] = \"cancelled\" =\u003e\n        \\A stop \\in StopsForShipment(s):\n            stopStatus[stop] # \"completed\" =\u003e\n                stopStatus[stop] = \"cancelled\"",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-CAUSAL-5: Cancellation cascades to stops",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 415
+      }
+    },
+    {
+      "name": "CompletedLocationImmutable",
+      "predicate": "\\A lc \\in pendingLocationChanges:\n    lc.status = \"applied\" =\u003e\n        stopStatus[lc.stop] # \"completed\"",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-STATE-4: Completed location immutable",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 598
+      }
+    },
+    {
+      "name": "DriverShipmentConsistency",
+      "predicate": "\\A s \\in Shipments:\n    shipmentState[s] = \"in_progress\" =\u003e\n        \\/ shipmentDriver[s] \\in Drivers\n        \\/ s \\in {r.shipment: r \\in pendingReassignments}",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-STATE-2: Driver-Shipment consistency",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 583
+      }
+    },
+    {
+      "name": "DwellTimeValid",
+      "predicate": "\\A stop \\in Stops:\n    stopStatus[stop] = \"completed\" =\u003e\n        LET d == stopCompletedBy[stop]\n            pingsAtStop == {p \\in pingHistory:\n                /\\ p.driver = d\n                /\\ Distance(p.location, stopLocation[stop]) \u003c= GEOFENCE_RADIUS\n                /\\ p.serverTick \u003e= stopArrivalTick[stop]}\n        IN /\\ Cardinality(pingsAtStop) \u003e= MIN_PINGS_FOR_DWELL\n           /\\ stopDepartureTick[stop] - stopArrivalTick[stop] \u003e= MIN_DWELL_TICKS",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-TEMPORAL-3: Dwell time must be real (verified by ping span)",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 329
+      }
+    },
+    {
+      "name": "FraudCancellationReversal",
+      "predicate": "\\A s \\in Shipments:\n    /\\ shipmentState[s] = \"cancelled\"\n    /\\ cancellationReason[s] = \"fraud\"\n    =\u003e ~\\E entry \\in ledgerEntries:\n        /\\ entry.shipment = s\n        /\\ entry.type \\in {\"payout\", \"partial_payout\"}\n        /\\ entry.cents \u003e 0",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-PAYMENT-8: Fraud cancellation reverses all",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 542
+      }
+    },
+    {
+      "name": "HeartbeatRequired",
+      "predicate": "\\A stop \\in Stops:\n    stopPayoutTriggered[stop] =\u003e\n        clock - driverLastPingTick[stopCompletedBy[stop]] \u003c= MAX_PING_GAP",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-CONTINUITY-1: Heartbeat required for payout",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 467
+      }
+    },
+    {
+      "name": "NoBilocation",
+      "predicate": "\\A p1, p2 \\in pingHistory:\n    /\\ p1.driver = p2.driver\n    /\\ p1.serverTick = p2.serverTick\n    =\u003e p1.location = p2.location",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-PHYSICS-2: No bilocation (same driver, same tick, different locations)",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 449
+      }
+    },
+    {
+      "name": "NoDoublePayoutsPerStop",
+      "predicate": "\\A stop \\in Stops:\n    Cardinality({e \\in ledgerEntries:\n        e.stop = stop /\\ e.type \\in {\"payout\", \"partial_payout\", \"resignation_payout\"}}) \u003c= 1",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-PAYMENT-4: No double payouts per stop",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 511
+      }
+    },
+    {
+      "name": "NoExcessiveClockDrift",
+      "predicate": "\\A p \\in pingHistory:\n    p.serverTick - p.clientTick \u003c= MAX_CLOCK_DRIFT",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-TEMPORAL-2: Clock drift within tolerance",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 324
+      }
+    },
+    {
+      "name": "NoFutureTimestamps",
+      "predicate": "\\A p \\in pingHistory:\n    p.clientTick \u003c= p.serverTick",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-TEMPORAL-1: No future timestamps",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 319
+      }
+    },
+    {
+      "name": "NoReorderAfterCompletion",
+      "predicate": "\\A r \\in pendingReorders:\n    r.status = \"applied\" =\u003e\n        ~\\E stop \\in StopsForShipment(r.shipment):\n            /\\ stopStatus[stop] = \"completed\"\n            /\\ stopDepartureTick[stop] \u003c r.requestedAt",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-CAUSAL-4: No reorder after completion",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 407
+      }
+    },
+    {
+      "name": "OnlyAssignedDriverCompletes",
+      "predicate": "\\A stop \\in Stops:\n    stopStatus[stop] = \"completed\" =\u003e\n        \\/ stopCompletedBy[stop] = shipmentDriver[stopShipment[stop]]\n        \\/ \\E hist \\in Range(driverAssignmentHistory[stopShipment[stop]]):\n            hist = stopCompletedBy[stop]",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-IDENTITY-2: Only assigned driver can complete stops",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 361
+      }
+    },
+    {
+      "name": "OrphanedShipmentHandling",
+      "predicate": "\\A s \\in Shipments:\n    /\\ shipmentState[s] = \"in_progress\"\n    /\\ \\E r \\in driverResignations: r.shipment = s\n    /\\ ~\\E d \\in Drivers: shipmentDriver[s] = d /\\ driverAccountStatus[d] = \"active\"\n    =\u003e s \\in {r.shipment: r \\in pendingReassignments}",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-STATE-3: Orphaned shipment handling",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 590
+      }
+    },
+    {
+      "name": "PayoutFollowsDriver",
+      "predicate": "\\A stop \\in Stops:\n    stopPayoutTriggered[stop] =\u003e\n        \\E entry \\in ledgerEntries:\n            /\\ entry.stop = stop\n            /\\ entry.driver = stopCompletedBy[stop]\n            /\\ entry.type \\in {\"payout\", \"partial_payout\", \"resignation_payout\"}",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-IDENTITY-1: Payout goes to driver who completed the work",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 352
+      }
+    },
+    {
+      "name": "PayoutRequiresPresence",
+      "predicate": "\\A stop \\in Stops:\n    stopPayoutTriggered[stop] =\u003e\n        \\E p \\in pingHistory:\n            /\\ p.driver = stopCompletedBy[stop]\n            /\\ Distance(p.location, stopLocation[stop]) \u003c= GEOFENCE_RADIUS\n            /\\ p.serverTick \u003e= stopArrivalTick[stop]\n            /\\ p.serverTick \u003c= stopDepartureTick[stop]",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-SPATIAL-1: Payout requires verified presence in geofence",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 291
+      }
+    },
+    {
+      "name": "PingDensityRequired",
+      "predicate": "\\A stop \\in Stops:\n    stopPayoutTriggered[stop] =\u003e\n        PingsInGeofenceDuringDwell(stopCompletedBy[stop], stop) \u003e= MIN_PINGS_FOR_DWELL",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-CONTINUITY-2: Minimum ping density during dwell",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 473
+      }
+    },
+    {
+      "name": "ProximityStateConsistent",
+      "predicate": "\\A d \\in Drivers, stop \\in Stops:\n    /\\ proximityState[d, stop] = \"at_location\"\n    =\u003e InGeofence(d, stop)",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-SPATIAL-2: Proximity state must match actual location",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 301
+      }
+    },
+    {
+      "name": "ShipmentRequiresAllStops",
+      "predicate": "\\A s \\in Shipments:\n    shipmentState[s] = \"completed\" =\u003e\n        \\A stop \\in StopsForShipment(s):\n            stopStatus[stop] \\in {\"completed\", \"skipped\"}",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-CAUSAL-2: Shipment completion requires all stops complete",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 394
+      }
+    },
+    {
+      "name": "ShipmentStopConsistency",
+      "predicate": "\\A s \\in Shipments:\n    /\\ shipmentState[s] = \"completed\" =\u003e\n        \\A stop \\in StopsForShipment(s):\n            stopStatus[stop] \\in {\"completed\", \"skipped\"}\n    /\\ shipmentState[s] = \"cancelled\" =\u003e\n        \\A stop \\in StopsForShipment(s):\n            stopStatus[stop] \\in {\"completed\", \"cancelled\", \"skipped\"}\n    /\\ shipmentState[s] = \"pending\" =\u003e\n        \\A stop \\in StopsForShipment(s):\n            stopStatus[stop] = \"pending\"",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-STATE-1: Shipment-Stop consistency",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 570
+      }
+    },
+    {
+      "name": "SpeedPlausibility",
+      "predicate": "\\A p1, p2 \\in pingHistory:\n    /\\ p1.driver = p2.driver\n    /\\ p1.serverTick \u003c p2.serverTick\n    /\\ p2.serverTick - p1.serverTick \u003c= 2  \\* Consecutive pings\n    =\u003e Distance(p1.location, p2.location) \u003c=\n       MAX_SPEED_PER_TICK * (p2.serverTick - p1.serverTick)",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-PHYSICS-1: Speed must be plausible",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 440
+      }
+    },
+    {
+      "name": "StopOrderingRespected",
+      "predicate": "\\A stop \\in Stops:\n    stopStatus[stop] = \"completed\" =\u003e\n        AllPreviousStopsComplete(stop)",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-CAUSAL-1: Stops must complete in sequence",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 388
+      }
+    },
+    {
+      "name": "StopRequiresActiveShipment",
+      "predicate": "\\A stop \\in Stops:\n    stopStatus[stop] = \"in_progress\" =\u003e\n        shipmentState[stopShipment[stop]] = \"in_progress\"",
+      "specFile": "PayoutFlowV3.tla",
+      "checked": false,
+      "doc": "INV-CAUSAL-3: Stop requires active shipment",
+      "loc": {
+        "file": "../docs/tla/PayoutFlowV3.tla",
+        "line": 401
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "inv:PAYMENT-13",
+      "to": "inv:PAYMENT-12",
+      "kind": "mentions-invariant"
+    },
+    {
+      "from": "op:0",
+      "to": "fault:credit_race",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:11",
+      "to": "fault:duplicate_webhook",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:14",
+      "to": "fault:negative_float",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:15",
+      "to": "fault:refund_during_shipment",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:16",
+      "to": "fault:settlement_delayed",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:18",
+      "to": "fault:idempotency_expired",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:3",
+      "to": "fault:double_complete",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:5",
+      "to": "fault:overdraw",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:7",
+      "to": "fault:transfer_fail",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:8",
+      "to": "fault:crash_after_stripe",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "op:9",
+      "to": "fault:ach_reversal",
+      "kind": "op-injects-fault"
+    },
+    {
+      "from": "truth:CAUSAL",
+      "to": "inv:CAUSAL-1",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:CAUSAL",
+      "to": "inv:CAUSAL-2",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:CAUSAL",
+      "to": "inv:CAUSAL-3",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:CONTINUITY",
+      "to": "inv:CONTINUITY-1",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:CONTINUITY",
+      "to": "inv:CONTINUITY-2",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:ECONOMICS",
+      "to": "inv:ECONOMICS-1",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:ECONOMICS",
+      "to": "inv:ECONOMICS-2",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:ECONOMICS",
+      "to": "inv:ECONOMICS-3",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:ECONOMICS",
+      "to": "inv:ECONOMICS-4",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:ECONOMICS",
+      "to": "inv:ECONOMICS-5",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:ECONOMICS",
+      "to": "inv:ECONOMICS-6",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:ECONOMICS",
+      "to": "inv:ECONOMICS-7",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:IDENTITY",
+      "to": "inv:IDENTITY-1",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:IDENTITY",
+      "to": "inv:IDENTITY-2",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:IDENTITY",
+      "to": "inv:IDENTITY-3",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:IDENTITY",
+      "to": "inv:IDENTITY-4",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-1",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-10",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-11",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-12",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-13",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-14",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-15",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-16",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-17",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-18",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-19",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-2",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-20",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-21",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-3",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-4",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-5",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-6",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-7",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-8",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PAYMENT",
+      "to": "inv:PAYMENT-9",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PHYSICS",
+      "to": "inv:PHYSICS-1",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:PHYSICS",
+      "to": "inv:PHYSICS-2",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:SPATIAL",
+      "to": "inv:SPATIAL-1",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:SPATIAL",
+      "to": "inv:SPATIAL-2",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:SPATIAL",
+      "to": "inv:SPATIAL-3",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:STATE",
+      "to": "inv:STATE-1",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:STATE",
+      "to": "inv:STATE-2",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:STATE",
+      "to": "inv:STATE-3",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:STATE",
+      "to": "inv:STATE-4",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:STATE",
+      "to": "inv:STATE-5",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:TEMPORAL",
+      "to": "inv:TEMPORAL-1",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:TEMPORAL",
+      "to": "inv:TEMPORAL-2",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "truth:TEMPORAL",
+      "to": "inv:TEMPORAL-3",
+      "kind": "truth-has-invariant"
+    },
+    {
+      "from": "inv:CAUSAL-2",
+      "to": "spec:StopOrderingRespected",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:CAUSAL-3",
+      "to": "spec:ShipmentRequiresAllStops",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:CONTINUITY-1",
+      "to": "spec:HeartbeatRequired",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:CONTINUITY-2",
+      "to": "spec:PingDensityRequired",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:IDENTITY-1",
+      "to": "spec:PayoutFollowsDriver",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:IDENTITY-2",
+      "to": "spec:OnlyAssignedDriverCompletes",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:IDENTITY-3",
+      "to": "spec:AssignmentHistoryComplete",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PAYMENT-1",
+      "to": "spec:NoNegativeBalances",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PAYMENT-15",
+      "to": "spec:NoPayoutsToInvalidAccounts",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PAYMENT-16",
+      "to": "spec:ExpiredCardBlocksPayout",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PAYMENT-17",
+      "to": "spec:InstantPayoutEligibility",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PAYMENT-18",
+      "to": "spec:InstantFailureFallback",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PAYMENT-19",
+      "to": "spec:CardReplacementHandling",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PAYMENT-2",
+      "to": "spec:NoMoneyWithoutRecord",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PAYMENT-20",
+      "to": "spec:NetworkBlackoutRespected",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PAYMENT-21",
+      "to": "spec:RetryBudgetRespected",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PAYMENT-3",
+      "to": "spec:NoRecordWithoutCompletion",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PAYMENT-4",
+      "to": "spec:NoDoublePayouts",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PAYMENT-5",
+      "to": "spec:NoUnpaidCompletedWork",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PAYMENT-6",
+      "to": "spec:BalanceImpliesCredit",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PAYMENT-7",
+      "to": "spec:NoRestrictedWithdrawals",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PAYMENT-8",
+      "to": "spec:IdempotencyRespected",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PHYSICS-1",
+      "to": "spec:SpeedPlausibility",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:PHYSICS-2",
+      "to": "spec:NoBilocation",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:SPATIAL-2",
+      "to": "spec:ProximityStateConsistent",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:STATE-2",
+      "to": "spec:ExternalAccountConsistency",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:STATE-3",
+      "to": "spec:PendingPayoutsHaveValidDestination",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:STATE-4",
+      "to": "spec:CardExpiryTracked",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:STATE-5",
+      "to": "spec:NoOrphanedPayoutFailures",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:TEMPORAL-1",
+      "to": "spec:NoFutureTimestamps",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:TEMPORAL-2",
+      "to": "spec:NoExcessiveClockDrift",
+      "kind": "validates"
+    },
+    {
+      "from": "inv:TEMPORAL-3",
+      "to": "spec:DwellTimeValid",
+      "kind": "validates"
+    }
+  ],
+  "stats": {
+    "truths": 9,
+    "invariants": 50,
+    "faults": 15,
+    "operations": 19,
+    "totalWeight": 92,
+    "edges": 94,
+    "specsTotal": 43,
+    "validated": 7,
+    "uncheckedSpec": 25,
+    "unspecified": 18
+  }
+}

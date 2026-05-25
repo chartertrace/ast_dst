@@ -1,0 +1,38 @@
+{
+  "//": "Maps ast_dst's own concepts onto its schema (dogfood). Run: go run ./cmd/astdst --root . --config presets/self.json. Most slots are honest gaps: an AST-walker is not a weighted fault-injecting state machine, so it has no op table, no invariant catalogue, and no TLA+ spec of its own. The two slots that DO map are real structures in the source.",
+  "root": ".",
+  "packages": [],
+
+  "//faults": "The verification toolchain's two phases ARE its failure-bearing stages: SANY (syntax) and TLC (model-check) — exactly where a drafted spec is found defective. The typed `Phase` enum is the only enum in the tree.",
+  "faults": {
+    "structSliceVar": "",
+    "enumType": "Phase",
+    "enumSkip": [],
+    "nameMapVar": ""
+  },
+
+  "//invariants": "ast_dst has no safety-property catalogue (no `var Invariants = []T{...}`). Disabled -> honest gap.",
+  "invariants": {
+    "structSliceVar": "",
+    "docFuncPattern": ""
+  },
+
+  "//operations": "ast_dst has no weighted dispatch table (no `var opTable = [N]func{...}` / weights). Disabled -> honest gap.",
+  "operations": {
+    "tableVar": "",
+    "weightsFunc": "",
+    "weightsVar": "",
+    "traceCall": ""
+  },
+
+  "//tla": "Disabled. The default specDir (../docs/tla) points at CharterTrace's real spec, OUTSIDE ast_dst; a true self-map must not reach there.",
+  "tla": {
+    "specDir": ""
+  },
+
+  "//state": "The Model struct IS the mutable state the pipeline acts on; its fields are the natural TLA+ VARIABLES of 'astdst the program'.",
+  "state": {
+    "typeName": "Model",
+    "package": ""
+  }
+}

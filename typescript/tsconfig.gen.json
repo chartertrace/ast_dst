@@ -1,0 +1,13 @@
+{
+  // Runtime config for tsx when executing the generators (gen:tla / gen:docs /
+  // gen:reconcile). It exists only so tsx/esbuild applies the automatic JSX
+  // runtime (jsx: react-jsx, from the base) to every file in the generators'
+  // import graph — src/gen + the src/site + src/model + src/components they pull
+  // in. Typechecking is still done by tsconfig.json + tsconfig.node.json; this
+  // file is not referenced by `npm run typecheck`.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["src", "vite.config.ts"]
+}

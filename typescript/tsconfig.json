@@ -1,0 +1,15 @@
+{
+  // Browser viewer: the shippable React component and its rendering helpers.
+  // Node-only tooling (src/gen, vite.config.ts) is excluded here and checked by
+  // tsconfig.node.json instead, so this project's scope is just the surface that
+  // ships. types: [] declines auto-included ambient @types — the viewer relies
+  // only on `lib` plus explicit imports. (Note: this does not fully block Node
+  // types, since a dependency may pull them in via a reference directive; a lint
+  // rule banning `node:*` imports under src/ would enforce that hard.)
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "types": []
+  },
+  "include": ["src"],
+  "exclude": ["src/gen"]
+}
