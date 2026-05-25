@@ -95,6 +95,17 @@ function main() {
     ),
   });
 
+  if (model.state) {
+    pages.push({
+      path: L.STATE,
+      element: (
+        <P.Layout ctx={ctx(L.STATE)} title="State · DST docs">
+          <P.StatePage ctx={ctx(L.STATE)} />
+        </P.Layout>
+      ),
+    });
+  }
+
   pages.push({
     path: L.OPERATIONS_INDEX,
     element: (

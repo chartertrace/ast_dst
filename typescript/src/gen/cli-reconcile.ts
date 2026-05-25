@@ -26,6 +26,11 @@ function main() {
   out.push(
     `  ${r.goInvariants} Go invariants · ${r.specInvariants} spec invariants · ${r.validated} validated (model-checked + runtime)`,
   );
+  if (r.generatedTotal > 0) {
+    out.push(
+      `  ${r.generatedTotal} machine-generated · ${r.generatedVerified} TLC-verified (behavioral) · ${r.generatedUnverified.length} unverified drafts`,
+    );
+  }
   out.push("");
 
   const section = (title: string, names: string[]) => {
@@ -46,6 +51,12 @@ function main() {
     "FOLK WISDOM — Go checker with no TLA+ counterpart (promote or accept)",
     r.folkWisdom.map((i) => `${i.id} ${i.label}`),
   );
+  if (r.generatedTotal > 0) {
+    section(
+      "DRAFTS — machine-generated but not TLC-verified (⚙✗)",
+      r.generatedUnverified.map((s) => `${s.name}  [${s.specFile}]`),
+    );
+  }
 
   process.stdout.write(out.join("\n") + "\n");
 

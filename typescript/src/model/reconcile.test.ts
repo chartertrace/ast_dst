@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import type { DstModel } from "../types";
 import { hasBlockingDrift, reconcile } from "./reconcile";
 import sample from "../../sample/model.json";
+import generatedSample from "../../sample/model.generated.json";
 
 const model = sample as unknown as DstModel;
+const generated = generatedSample as unknown as DstModel;
 
 describe("reconcile", () => {
   const r = reconcile(model);
@@ -31,5 +33,24 @@ describe("reconcile", () => {
 
   it("hasBlockingDrift tracks the runtime gap", () => {
     expect(hasBlockingDrift(r)).toBe(r.runtimeGap.length > 0);
+  });
+});
+
+describe("reconcile — machine-generated provenance", () => {
+  const r = reconcile(generated);
+
+  it("counts generated specs and the TLC-verified (behavioral) subset", () => {
+    expect(r.generatedTotal).toBe(3);
+    expect(r.generatedVerified).toBe(1); // NoNegativeBalance: verified + behavioral
+  });
+
+  it("flags generated-but-unverified drafts", () => {
+    expect(r.generatedUnverified.map((s) => s.name)).toEqual(["FrozenImpliesEmpty"]);
+  });
+
+  it("a verified-but-not-behavioral spec is a runtime gap, not 'verified'", () => {
+    // WellFormedOnly is checked + generated + verified but behavioral=false, and no
+    // Go checker binds to it -> it surfaces as a runtime gap and not in generatedVerified.
+    expect(r.runtimeGap.map((s) => s.name)).toContain("WellFormedOnly");
   });
 });

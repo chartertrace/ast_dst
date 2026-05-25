@@ -13,10 +13,12 @@ import (
 )
 
 // RunGenerate deterministically synthesises a TLA+ spec from the codebase (no
-// LLM, no network), verifies it with the real tools (SANY then TLC), writes it,
-// and re-extracts the model with that spec bound in — so the generated spec flows
-// through the exact same pipeline (and viewer) as a hand-written one. Requires
-// only java and tla2tools.jar.
+// LLM, no network), writes it, and re-extracts the model with that spec bound in
+// — so the generated spec flows through the exact same pipeline (and viewer) as a
+// hand-written one. Synthesis itself has no dependencies. Verification (SANY then
+// TLC) is an optional enhancement: with --verify (the default) it runs when a JVM
+// + tla2tools.jar are present, and otherwise the spec is still written, clearly
+// marked unverified. Pass --verify=false to skip the toolchain lookup entirely.
 func RunGenerate(args []string) {
 	fs := flag.NewFlagSet("astdst generate", flag.ExitOnError)
 	root := fs.String("root", "", "codebase root to parse (overrides config; default sim path)")
@@ -25,6 +27,7 @@ func RunGenerate(args []string) {
 	outSpec := fs.String("out-spec", "./generated", "directory to write the generated .tla/.cfg")
 	module := fs.String("module", "DstSpec", "TLA+ module name (also the file base name)")
 	jar := fs.String("jar", "", "path to tla2tools.jar (else $TLA2TOOLS_JAR or beside the spec)")
+	verify := fs.Bool("verify", true, "verify with SANY+TLC when a JVM + tla2tools.jar are available")
 	workers := fs.Int("workers", 2, "TLC parallel workers")
 	timeout := fs.Duration("timeout", 2*time.Minute, "wall-clock budget for verification")
 	indent := fs.Bool("indent", true, "pretty-print JSON")
@@ -43,20 +46,37 @@ func RunGenerate(args []string) {
 	}
 
 	// 2. Locate the TLA+ toolchain (search the configured spec dir for the jar).
-	searchDir := cfg.TLA.SpecDir
-	if searchDir != "" && !filepath.IsAbs(searchDir) {
-		searchDir = filepath.Join(absRoot, searchDir)
-	}
-	tc, err := gen.NewToolchain(*jar, searchDir)
-	if err != nil {
-		fail("toolchain: %v", err)
+	// A missing toolchain is NOT fatal: synthesis is deterministic and needs no
+	// JVM, so we still produce the spec — just unverified. Verification is an
+	// optional enhancement, never a prerequisite for getting the spec.
+	var tc *gen.Toolchain
+	if *verify {
+		searchDir := cfg.TLA.SpecDir
+		if searchDir != "" && !filepath.IsAbs(searchDir) {
+			searchDir = filepath.Join(absRoot, searchDir)
+		}
+		var tcErr error
+		tc, tcErr = gen.NewToolchain(*jar, searchDir)
+		if tcErr != nil {
+			fmt.Fprintf(os.Stderr,
+				"astdst: TLA+ toolchain unavailable (%v)\n"+
+					"astdst: synthesising the spec anyway — it will be marked UNVERIFIED.\n"+
+					"astdst: run `astdst doctor` to diagnose, then re-run to verify with TLC.\n",
+				tcErr)
+		}
+	} else {
+		fmt.Fprintln(os.Stderr, "astdst: --verify=false — skipping the toolchain; spec will be UNVERIFIED.")
 	}
 
-	// 3. Synthesise + verify deterministically.
+	// 3. Synthesise (always) + verify (only if the toolchain was found).
 	ctx, cancel := context.WithTimeout(context.Background(), *timeout)
 	defer cancel()
 
-	fmt.Fprintln(os.Stderr, "astdst: synthesising TLA+ spec and verifying with SANY + TLC…")
+	if tc != nil {
+		fmt.Fprintln(os.Stderr, "astdst: synthesising TLA+ spec and verifying with SANY + TLC…")
+	} else {
+		fmt.Fprintln(os.Stderr, "astdst: synthesising TLA+ spec (verification skipped)…")
+	}
 	res, err := gen.Generate(ctx, tc, model, gen.Options{
 		ModuleName: *module,
 		Workers:    *workers,
@@ -127,6 +147,10 @@ func reportVerification(res *gen.GenResult, dir string) {
 		fmt.Fprintf(os.Stderr, "astdst: ✗ UNVERIFIED — invariant %s does not hold at the initial state → %s\n", res.TLC.Violated, dir)
 	case res.TLC != nil && res.TLC.TimedOut:
 		fmt.Fprintf(os.Stderr, "astdst: ✗ UNVERIFIED — TLC timed out → %s\n", dir)
+	case res.SANY == nil && res.TLC == nil:
+		fmt.Fprintf(os.Stderr,
+			"astdst: ⚙✗ UNVERIFIED — verification did not run (no TLA+ toolchain). The spec is well-formed by construction but unchecked → %s\n",
+			dir)
 	default:
 		fmt.Fprintf(os.Stderr, "astdst: ✗ UNVERIFIED → %s\n", dir)
 	}

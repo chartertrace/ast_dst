@@ -30,9 +30,18 @@ export interface ReconcileReport {
    */
   folkWisdom: Invariant[];
 
+  /**
+   * (4) Drafts: machine-generated spec invariants (`astdst generate`) that TLC
+   * has not verified clean. A `⚙✗` is a draft, not a checked claim — informational,
+   * not blocking.
+   */
+  generatedUnverified: SpecInvariant[];
+
   goInvariants: number;
   specInvariants: number;
   validated: number; // Go checkers bound to a model-checked spec invariant
+  generatedTotal: number; // spec invariants that are machine-generated
+  generatedVerified: number; // generated AND TLC-verified against real value transitions
 }
 
 // TLA+ convention: TypeOK / a *TypeInvariant is the type-correctness predicate.
@@ -48,15 +57,19 @@ export function reconcile(model: DstModel): ReconcileReport {
     if (inv.spec) linked.add(inv.spec.name);
   }
 
+  const generated = specs.filter((s) => s.generated);
   return {
     specRot: specs.filter((s) => !s.checked),
     runtimeGap: specs.filter(
       (s) => s.checked && !linked.has(s.name) && !isTypeInvariant(s.name),
     ),
     folkWisdom: model.invariants.filter((i) => i.specStatus === "unspecified"),
+    generatedUnverified: generated.filter((s) => !s.verified),
     goInvariants: model.invariants.length,
     specInvariants: specs.length,
     validated: model.invariants.filter((i) => i.specStatus === "validated").length,
+    generatedTotal: generated.length,
+    generatedVerified: generated.filter((s) => s.verified && s.behavioral).length,
   };
 }
 

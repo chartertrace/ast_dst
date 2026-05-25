@@ -82,13 +82,20 @@ reachable states?).
 ```bash
 cd golang
 go run ./cmd generate --out-spec ./generated --out model.json
-# flags: --root --config --module --jar --workers --timeout
+# flags: --root --config --module --jar --verify --workers --timeout
+go run ./cmd doctor   # is the verification toolchain wired up?
 ```
 
-Requires only a JVM and `tla2tools.jar` (found via `--jar`, `$TLA2TOOLS_JAR`, or
-beside the configured spec dir) — no API key. The generated `.tla`/`.cfg` land
-in `--out-spec` and are re-extracted through the same binding layer, so the spec
-flows into `model.json` and the viewer like a hand-written one. The badge is
+**Verification is optional, not a prerequisite.** Synthesis is deterministic and
+needs nothing but Go, so the spec is *always* produced. When a JVM and
+`tla2tools.jar` are present (found via `--jar`, `$TLA2TOOLS_JAR`, or beside the
+configured spec dir — no API key), the draft is checked with SANY + TLC and
+badged accordingly. When they're absent the run does **not** fail: it writes the
+spec marked `⚙✗` **unverified** and points you at `astdst doctor`, which reports
+exactly which of java / `tla2tools.jar` is missing. `--verify=false` skips the
+toolchain lookup entirely. The generated `.tla`/`.cfg` land in `--out-spec` and
+are re-extracted through the same binding layer, so the spec flows into
+`model.json` and the viewer like a hand-written one. The badge is
 honest about the strength of the check: `⚙✓` **behavioral** (TLC checked an
 active invariant against real value transitions), `⚙~` **well-formed** (parses
 and holds, but transitions carry no value semantics — a weak claim), or `⚙✗`

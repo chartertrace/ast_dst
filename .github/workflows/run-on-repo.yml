@@ -1,0 +1,62 @@
+name: Run on a repo
+
+# Manually run ast_dst against any public Go repository and publish the resulting
+# docs+viewer site to this repo's GitHub Pages. Reuses scripts/run-on-repo.sh, so
+# the CLI logic is identical to running it locally.
+on:
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: "Git URL of the target Go repo (e.g. https://github.com/org/name)"
+        required: true
+        type: string
+      ref:
+        description: "Branch, tag, or commit SHA (blank = the repo's default branch)"
+        required: false
+        type: string
+      exported_only:
+        description: "Structure mode: include only exported declarations"
+        required: false
+        type: boolean
+        default: false
+
+# Publish to Pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One in-flight deploy at a time; don't cancel a running publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run ast_dst on the target repo
+        run: |
+          ./scripts/run-on-repo.sh \
+            "${{ inputs.repo }}" \
+            ${{ inputs.ref && format('"{0}"', inputs.ref) || '' }} \
+            --out ./site \
+            ${{ inputs.exported_only && '--exported-only' || '' }}
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+      - id: deploy
+        uses: actions/deploy-pages@v4

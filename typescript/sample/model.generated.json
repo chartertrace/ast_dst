@@ -1,0 +1,52 @@
+{
+  "generatedAt": "2026-01-01T00:00:00Z",
+  "source": { "simPath": "synthetic/sim", "filesRead": 1, "toolModule": "astdst" },
+  "truths": [{ "name": "ACCT", "count": 2 }],
+  "invariants": [
+    {
+      "id": "ACCT-1",
+      "label": "NoNegativeBalance",
+      "truth": "ACCT",
+      "doc": "Balance is never negative.",
+      "loc": { "file": "state.go", "line": 10 },
+      "spec": { "name": "NoNegativeBalance", "specFile": "Gen.tla", "checked": true, "generated": true, "verified": true, "behavioral": true },
+      "specStatus": "validated"
+    },
+    {
+      "id": "ACCT-2",
+      "label": "FrozenImpliesEmpty",
+      "truth": "ACCT",
+      "doc": "A frozen account holds no balance.",
+      "loc": { "file": "state.go", "line": 20 },
+      "spec": { "name": "FrozenImpliesEmpty", "specFile": "Gen.tla", "checked": false, "generated": true, "verified": false },
+      "specStatus": "unchecked-spec"
+    }
+  ],
+  "faults": [],
+  "operations": [
+    { "index": 0, "handler": "opDeposit", "name": "Deposit", "weight": 1, "share": 1, "faults": [], "loc": { "file": "engine.go", "line": 5 } }
+  ],
+  "state": {
+    "typeName": "Account",
+    "kind": "struct",
+    "variables": [
+      { "name": "balance", "type": "int64", "loc": { "file": "state.go", "line": 2 } },
+      { "name": "frozen", "type": "bool", "loc": { "file": "state.go", "line": 3 } }
+    ],
+    "loc": { "file": "state.go", "line": 1 }
+  },
+  "specs": [
+    { "name": "NoNegativeBalance", "predicate": "balance >= 0", "specFile": "Gen.tla", "checked": true, "generated": true, "verified": true, "behavioral": true, "tlcStates": 42, "tlcDepth": 7 },
+    { "name": "FrozenImpliesEmpty", "predicate": "frozen => balance = 0", "specFile": "Gen.tla", "checked": false, "generated": true, "verified": false },
+    { "name": "WellFormedOnly", "predicate": "TRUE", "specFile": "Gen.tla", "checked": true, "generated": true, "verified": true, "behavioral": false, "tlcStates": 3 }
+  ],
+  "edges": [
+    { "from": "truth:ACCT", "to": "inv:ACCT-1", "kind": "truth-has-invariant" },
+    { "from": "truth:ACCT", "to": "inv:ACCT-2", "kind": "truth-has-invariant" },
+    { "from": "inv:ACCT-1", "to": "spec:NoNegativeBalance", "kind": "validates" }
+  ],
+  "stats": {
+    "truths": 1, "invariants": 2, "faults": 0, "operations": 1, "totalWeight": 1, "edges": 3,
+    "specsTotal": 3, "validated": 1, "uncheckedSpec": 1, "unspecified": 0
+  }
+}

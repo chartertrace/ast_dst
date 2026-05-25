@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-05-25T20:47:02Z",
+  "generatedAt": "2026-05-25T23:07:27Z",
   "source": {
-    "simPath": "/Users/jackdunlap/Desktop/CharterTrace - Main/app/primary-server/sim",
+    "simPath": "../../app/primary-server/sim",
     "filesRead": 42,
     "toolModule": "astdst"
   },
@@ -1291,6 +1291,536 @@
       }
     }
   ],
+  "state": {
+    "typeName": "StateServer",
+    "kind": "interface",
+    "variables": [
+      {
+        "name": "Now",
+        "type": "() time.Time",
+        "doc": "Clock and time",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 13
+        }
+      },
+      {
+        "name": "Tick",
+        "type": "()",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 14
+        }
+      },
+      {
+        "name": "GetClock",
+        "type": "() int64",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 15
+        }
+      },
+      {
+        "name": "SetClock",
+        "type": "(value int64)",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 16
+        }
+      },
+      {
+        "name": "SetBaseTime",
+        "type": "(t time.Time)",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 17
+        }
+      },
+      {
+        "name": "SetTickDuration",
+        "type": "(d time.Duration)",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 18
+        }
+      },
+      {
+        "name": "SetPayoutCents",
+        "type": "(cents int64)",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 19
+        }
+      },
+      {
+        "name": "GetDriverPayoutCents",
+        "type": "() int64",
+        "doc": "Returns the per-shipment driver payout amount",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 20
+        }
+      },
+      {
+        "name": "CreateDriver",
+        "type": "(driverID string)",
+        "doc": "Driver operations",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 23
+        }
+      },
+      {
+        "name": "GetDriverAccountStatus",
+        "type": "(driverID string) string",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 24
+        }
+      },
+      {
+        "name": "SuspendDriver",
+        "type": "(driverID string) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 25
+        }
+      },
+      {
+        "name": "RestrictDriver",
+        "type": "(driverID string) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 26
+        }
+      },
+      {
+        "name": "ReactivateDriver",
+        "type": "(driverID string) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 27
+        }
+      },
+      {
+        "name": "GetDriverBalance",
+        "type": "(driverID string) int64",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 28
+        }
+      },
+      {
+        "name": "InitDriverPool",
+        "type": "(idGenerator func() string)",
+        "doc": "Driver pool operations (INV-32: SingleActiveShipmentPerDriver)",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 31
+        }
+      },
+      {
+        "name": "GetAvailableDriver",
+        "type": "() (string, error)",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 32
+        }
+      },
+      {
+        "name": "HasActiveShipment",
+        "type": "(driverID string) bool",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 33
+        }
+      },
+      {
+        "name": "GetDriverPoolSize",
+        "type": "() int",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 34
+        }
+      },
+      {
+        "name": "GetAvailableDriverCount",
+        "type": "() int",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 35
+        }
+      },
+      {
+        "name": "CreateShipment",
+        "type": "(driverID string) string",
+        "doc": "Shipment operations",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 38
+        }
+      },
+      {
+        "name": "CreateShipmentWithID",
+        "type": "(shipmentID, driverID string) error",
+        "doc": "Returns error if driver cannot accept shipments (INV-32)",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 39
+        }
+      },
+      {
+        "name": "GetShipmentStatus",
+        "type": "(shipmentID string) string",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 40
+        }
+      },
+      {
+        "name": "SetShipmentStatus",
+        "type": "(shipmentID, status string) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 41
+        }
+      },
+      {
+        "name": "CancelShipment",
+        "type": "(shipmentID string) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 42
+        }
+      },
+      {
+        "name": "AcceptShipment",
+        "type": "(shipmentID string) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 43
+        }
+      },
+      {
+        "name": "CompleteShipment",
+        "type": "(shipmentID string) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 44
+        }
+      },
+      {
+        "name": "GetPingCount",
+        "type": "(shipmentID string) int",
+        "doc": "Ping operations",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 47
+        }
+      },
+      {
+        "name": "PostLocation",
+        "type": "(shipmentID string, lat, lon, speed float64)",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 48
+        }
+      },
+      {
+        "name": "PostLocationUpdate",
+        "type": "(shipmentID string, update *contracts.LocationUpdate) *contracts.ValidationResult",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 49
+        }
+      },
+      {
+        "name": "GetLedgerEntriesForDriver",
+        "type": "(driverID string) []*LedgerEntry",
+        "doc": "Ledger operations",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 52
+        }
+      },
+      {
+        "name": "HasLedgerEntryForShipment",
+        "type": "(shipmentID string) bool",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 53
+        }
+      },
+      {
+        "name": "CountPayoutsForShipment",
+        "type": "(shipmentID string) int",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 54
+        }
+      },
+      {
+        "name": "GetLedgerEntryCount",
+        "type": "(shipmentID string) int",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 55
+        }
+      },
+      {
+        "name": "GetGeofenceEventCount",
+        "type": "(shipmentID string, eventType string) int",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 56
+        }
+      },
+      {
+        "name": "GetPendingTransfers",
+        "type": "() []*StripeTransfer",
+        "doc": "Transfer operations",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 59
+        }
+      },
+      {
+        "name": "GetTransferStatus",
+        "type": "(transferID string) string",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 60
+        }
+      },
+      {
+        "name": "ProcessStripeTransferSuccess",
+        "type": "(transferID string) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 61
+        }
+      },
+      {
+        "name": "ProcessStripeTransferFailure",
+        "type": "(transferID string) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 62
+        }
+      },
+      {
+        "name": "StripeSucceedsThenCrash",
+        "type": "(transferID string) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 63
+        }
+      },
+      {
+        "name": "RequestWithdrawal",
+        "type": "(driverID string, amountCents int64) (string, error)",
+        "doc": "Withdrawal operations",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 66
+        }
+      },
+      {
+        "name": "ProcessWithdrawalSuccess",
+        "type": "(withdrawalID string) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 67
+        }
+      },
+      {
+        "name": "ProcessWithdrawalFailure",
+        "type": "(withdrawalID string) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 68
+        }
+      },
+      {
+        "name": "GetWithdrawalStatus",
+        "type": "(withdrawalID string) string",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 69
+        }
+      },
+      {
+        "name": "GetPendingWithdrawals",
+        "type": "() []*Withdrawal",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 70
+        }
+      },
+      {
+        "name": "RunReconciliation",
+        "type": "() error",
+        "doc": "Reconciliation",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 73
+        }
+      },
+      {
+        "name": "SimulateIdempotencyExpiry",
+        "type": "(transferID string) error",
+        "doc": "SimulateIdempotencyExpiry rewinds a transfer's CreatedAtClock past the Stripe idempotency replay window so the next RunReconciliation parks it as manual_review. Used to inject FaultIdempotencyExpired.",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 78
+        }
+      },
+      {
+        "name": "Stats",
+        "type": "() ServerStats",
+        "doc": "Stats and invariants",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 81
+        }
+      },
+      {
+        "name": "CheckAllTLAInvariants",
+        "type": "() []error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 82
+        }
+      },
+      {
+        "name": "DualStateSums",
+        "type": "() ledgerCents, stripeCents int64",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 83
+        }
+      },
+      {
+        "name": "ACHReversalByDriver",
+        "type": "(driverID string) error",
+        "doc": "Failure testing",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 86
+        }
+      },
+      {
+        "name": "InitBrokerPool",
+        "type": "(count int, idGenerator func() string)",
+        "doc": "Economic modeling operations (INV-ECON-1 through INV-ECON-7)",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 89
+        }
+      },
+      {
+        "name": "BrokerPurchaseCredits",
+        "type": "(brokerID string, credits int64) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 90
+        }
+      },
+      {
+        "name": "ReserveCreditForShipment",
+        "type": "(shipmentID, brokerID string) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 91
+        }
+      },
+      {
+        "name": "ConsumeCreditForShipment",
+        "type": "(shipmentID string) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 92
+        }
+      },
+      {
+        "name": "ReleaseCreditForShipment",
+        "type": "(shipmentID string) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 93
+        }
+      },
+      {
+        "name": "RefundBrokerCredits",
+        "type": "(brokerID string, credits int64) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 94
+        }
+      },
+      {
+        "name": "ProcessSettlements",
+        "type": "()",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 95
+        }
+      },
+      {
+        "name": "RecordDriverPayout",
+        "type": "(driverID string, amountCents int64) error",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 96
+        }
+      },
+      {
+        "name": "GetPlatformEconomics",
+        "type": "() *PlatformEconomics",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 97
+        }
+      },
+      {
+        "name": "GetBrokerCreditsAvailable",
+        "type": "(brokerID string) int64",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 98
+        }
+      },
+      {
+        "name": "GetAvailableBroker",
+        "type": "() (string, error)",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 99
+        }
+      },
+      {
+        "name": "GetBrokerCount",
+        "type": "() int",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 100
+        }
+      },
+      {
+        "name": "Reset",
+        "type": "()",
+        "doc": "Lifecycle",
+        "loc": {
+          "file": "state/interface.go",
+          "line": 103
+        }
+      }
+    ],
+    "loc": {
+      "file": "state/interface.go",
+      "line": 11
+    }
+  },
   "specs": [
     {
       "name": "BalanceImpliesCredit",

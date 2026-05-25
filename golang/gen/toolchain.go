@@ -1,9 +1,11 @@
 // Package gen turns an extracted codebase model into a TLA+ specification: it
-// builds a prompt from the extract.Bundle, asks an LLM to draft a spec, and —
-// crucially — verifies the draft with the real TLA+ tools (SANY then TLC) before
-// anything is surfaced. Nothing is labelled "verified" unless TLC model-checked
-// it clean, which keeps the project's honesty guarantee: a spec that does not
-// hold is reported as failing, never massaged to look complete.
+// synthesises the spec deterministically from the model (no LLM, no network —
+// the same model in yields the same spec out) and, when a JVM + tla2tools.jar
+// are available, verifies the draft with the real TLA+ tools (SANY then TLC).
+// Nothing is labelled "verified" unless TLC model-checked it clean, which keeps
+// the project's honesty guarantee: a spec that does not hold — or that was never
+// checked because the toolchain was absent — is reported as such, never massaged
+// to look complete.
 package gen
 
 import (
@@ -66,6 +68,11 @@ func NewToolchain(jarHint string, searchDirs ...string) (*Toolchain, error) {
 	}
 	return &Toolchain{Java: java, Jar: jar}, nil
 }
+
+// FindJava resolves the java binary from $JAVA_HOME or PATH, the same way the
+// toolchain does. Exported so `astdst doctor` can report its location without
+// constructing a full Toolchain (which also requires the jar).
+func FindJava() (string, error) { return findJava() }
 
 func findJava() (string, error) {
 	if home := os.Getenv("JAVA_HOME"); home != "" {

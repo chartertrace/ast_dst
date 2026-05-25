@@ -160,6 +160,31 @@ func TestGenerateVerifiesSynthesized(t *testing.T) {
 	}
 }
 
+// TestGenerateNilToolchainSkipsVerification locks in the graceful-degradation
+// contract: with no toolchain, synthesis still runs and the draft is returned,
+// but verification is skipped (SANY/TLC nil, Verified false). The CLI relies on
+// this to write an honestly-unverified spec instead of failing when a JVM +
+// tla2tools.jar are absent.
+func TestGenerateNilToolchainSkipsVerification(t *testing.T) {
+	t.Parallel()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	res, err := Generate(ctx, nil, sampleModel(), Options{})
+	if err != nil {
+		t.Fatalf("Generate with nil toolchain should not error: %v", err)
+	}
+	if res.Draft == nil || res.Draft.TLA == "" {
+		t.Fatal("expected a synthesised draft even without a toolchain")
+	}
+	if res.Verified {
+		t.Error("Verified must be false when verification was skipped")
+	}
+	if res.SANY != nil || res.TLC != nil {
+		t.Errorf("no tool should run without a toolchain: SANY=%v TLC=%v", res.SANY, res.TLC)
+	}
+}
+
 func TestOpActionValueForms(t *testing.T) {
 	t.Parallel()
 	num := synthVar{tlaName: "Clock", field: "Clock", kind: kindNum}

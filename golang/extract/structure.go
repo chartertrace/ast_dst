@@ -63,6 +63,23 @@ func ExtractStructure(cfg StructureConfig) (*Model, error) {
 	operations := structureFuncs(p, keep, typeID)
 	invariants, truths := structurePackageGlobals(p, keep)
 
+	// A repo missing a whole declaration kind (e.g. no package-level globals)
+	// leaves the corresponding slice nil, which marshals to JSON `null` and
+	// breaks every consumer that maps over it (the viewer, the docs/trace
+	// generators). Coerce to empty so an absent kind serialises as [].
+	if faults == nil {
+		faults = []Fault{}
+	}
+	if operations == nil {
+		operations = []Operation{}
+	}
+	if invariants == nil {
+		invariants = []Invariant{}
+	}
+	if truths == nil {
+		truths = []Truth{}
+	}
+
 	m := &Model{
 		GeneratedAt: time.Now().UTC().Format(time.RFC3339),
 		Source:      Source{SimPath: cfg.Root, FilesRead: len(p.files), ToolModule: "astdst"},
@@ -82,6 +99,9 @@ func ExtractStructure(cfg StructureConfig) (*Model, error) {
 		},
 	}
 	m.Edges = buildEdges(m)
+	if m.Edges == nil {
+		m.Edges = []Edge{}
+	}
 	m.Stats = Stats{
 		Truths:      len(truths),
 		Invariants:  len(invariants),

@@ -87,32 +87,32 @@ checkers (runtime). From `specStatus` + `specs[].checked` the report derives:
   set. Often expected (state-space explosion forces a checked subset).
 - **sim-only** — a Go checker with no TLA+ counterpart; promote to the spec or
   knowingly accept (e.g. ECONOMICS).
+- **drafts** — when the model carries machine-generated specs (`astdst generate`),
+  it also reports how many are TLC-verified (behavioral) vs. unverified `⚙✗`
+  drafts.
 
-### TLA+ scaffold (+ trace-validation spec)
+### Trace-validation scaffold
+
+> Spec **synthesis** (VARIABLES/Init/Next + invariants, verified with SANY/TLC)
+> is owned by the Go `astdst generate` command — it has the state model and write
+> sets and runs the real tools. This TS generator deliberately does *not*
+> re-synthesize a spec; it produces the one piece the Go side doesn't: a TraceSpec
+> that replays a DST trace against an existing spec.
 
 ```bash
-npm run gen:tla -- --in sample/model.json --out tla-gen --module DstSpec
+npm run gen:trace -- --in sample/model.json --out tla-gen --base PayoutFlowGen
 ```
 
-Emits `<module>.tla` + `<module>.cfg`. It is a **scaffold**: every invariant
-predicate the model carries is filled in — taken verbatim from a linked TLA+
-spec where one exists, else recovered from the `TLA+ Specification:` block in the
-Go doc comment and converted from Unicode glyphs to ASCII (`src/model/glyphs.ts`).
-`CONSTANTS`, `VARIABLES`, `Init`, and the per-operation transitions are left as
-clearly-marked `TODO` stubs for you to complete. Invariants with no recoverable
-predicate become `TRUE` stubs rather than invented predicates. The command prints
-a coverage report (real predicate vs. stub).
-
-It also writes `<module>Trace.tla` + `.cfg` — a **trace-validation scaffold** (the
-technique from the SEFM 2024 paper above; production reference: etcd-io/raft
-PR #113). It `EXTENDS` the scaffold, reads an NDJSON trace via
-`ndJsonDeserialize(IOEnv.TRACE_PATH)`, composes one `IsEvent("Op") \cdot Op` per
-operation, and accepts when TLC has consumed the whole trace (`TraceAccepted`).
-Fill in `UpdateVariables` (the one spot that maps event JSON onto spec
-`VARIABLES`) and have your Go DST harness emit `{"event":"<OpName>", ...}` lines —
-then `TRACE_PATH=trace.ndjson tlc -config <module>Trace.cfg <module>Trace.tla`
-checks real runs against the spec. Pass `--no-trace` to skip. (The viewer Coverage
-page mirrors `gen:reconcile`.)
+Writes `<base>Trace.tla` + `.cfg` — a **trace-validation scaffold** (Cirstea/Kuppe/
+Loillier/Merz, SEFM 2024, arXiv:2404.16075; production reference: etcd-io/raft
+PR #113). It `EXTENDS` `--base` (normally the module name `astdst generate`
+produced), reads an NDJSON trace via `ndJsonDeserialize(IOEnv.TRACE_PATH)`,
+composes one `IsEvent("Op") \cdot Op` per operation, and accepts when TLC has
+consumed the whole trace (`TraceAccepted`). Fill in `UpdateVariables` (the one
+spot that maps event JSON onto the spec's `VARIABLES`) and have your Go DST
+harness emit `{"event":"<OpName>", ...}` lines — then
+`TRACE_PATH=trace.ndjson tlc -config <base>Trace.cfg <base>Trace.tla` checks real
+runs against the spec.
 
 ### Static doc site (godoc-style)
 
@@ -125,7 +125,11 @@ Renders a self-contained static site (`pkg.go.dev`-style): an overview with the
 stats, truth list, and TLA+ coverage — plus the **interactive `<DstAstView/>`
 embedded as an island** — and per-symbol pages for operations, faults, and
 invariants (docs, weights, TLA+ predicate, spec-status badge, source links, and
-cross-links derived from the model's edges). `gen:docs` first runs `build:viewer`
+cross-links derived from the model's edges). Invariants also carry the
+`⚙✓`/`⚙~`/`⚙✗` provenance badge for machine-generated specs, a **Coverage** page
+reports drift (mirrors `gen:reconcile`), and — when the model has a `state` block —
+a **State** page lists the VARIABLES (honestly labelled when the state type is an
+interface, not a struct). `gen:docs` first runs `build:viewer`
 (Vite) to bundle the island into `dist-viewer/`, then writes pages into `--out`.
 `--repo-base` makes `file:line` references clickable; omit it for plain text.
 Open `site/index.html` directly or host the folder (e.g. GitHub Pages).

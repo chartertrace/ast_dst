@@ -27,15 +27,25 @@ type GenResult struct {
 	TLC      *Result      `json:"tlc,omitempty"`
 }
 
-// Generate deterministically synthesises a TLA+ spec from the model and verifies
-// it with the real tools: SANY (does it parse and type-check?) then TLC (does the
-// initial state satisfy the invariants?). No LLM, no network — the same model in
-// yields the same spec out. Transitions are stubs, so "verified" is an honest,
-// bounded claim: well-formed and consistent at Init, not a behavioural proof.
+// Generate deterministically synthesises a TLA+ spec from the model and, when a
+// toolchain is supplied, verifies it with the real tools: SANY (does it parse and
+// type-check?) then TLC (does the initial state satisfy the invariants?). No LLM,
+// no network — the same model in yields the same spec out. Transitions are stubs,
+// so "verified" is an honest, bounded claim: well-formed and consistent at Init,
+// not a behavioural proof.
+//
+// tc may be nil: synthesis needs no dependencies, so the spec is still produced
+// and returned (SANY/TLC nil, Verified false) — the caller writes it marked
+// unverified. Verification is an optional enhancement, not a prerequisite.
 func Generate(ctx context.Context, tc *Toolchain, m *extract.Model, opts Options) (*GenResult, error) {
 	draft, report, err := Synthesize(m, opts.ModuleName)
 	if err != nil {
 		return nil, err
+	}
+
+	res := &GenResult{Draft: draft, Report: report}
+	if tc == nil {
+		return res, nil // no toolchain: synthesis-only, honestly unverified
 	}
 
 	scratch := opts.ScratchDir
@@ -51,8 +61,6 @@ func Generate(ctx context.Context, tc *Toolchain, m *extract.Model, opts Options
 	if err != nil {
 		return nil, err
 	}
-
-	res := &GenResult{Draft: draft, Report: report}
 
 	sany, err := tc.SANY(ctx, tlaPath)
 	if err != nil {
