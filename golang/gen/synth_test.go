@@ -52,7 +52,7 @@ func TestSynthesizeStructure(t *testing.T) {
 	wantContains := []string{
 		"VARIABLES Clock, active, Balances",
 		"CONSTANT MaxNat",
-		"Clock \\in 0..MaxNat",
+		"Clock \\in Nat",
 		"active \\in BOOLEAN",
 		"Init ==",
 		"Clock = 0",
@@ -118,9 +118,9 @@ func TestPredicateResolves(t *testing.T) {
 func TestTlaTypeOf(t *testing.T) {
 	t.Parallel()
 	cases := []struct{ in, init, typeOK, kind string }{
-		{"int64", "0", "0..MaxNat", kindNum},
-		{"uint", "0", "0..MaxNat", kindNum},
-		{"float64", "0", "0..MaxNat", kindNum},
+		{"int64", "0", "Nat", kindNum},
+		{"uint", "0", "Nat", kindNum},
+		{"float64", "0", "Nat", kindNum},
 		{"bool", "FALSE", "BOOLEAN", kindBool},
 		{"string", `""`, "STRING", kindOther},
 		{"map[string]int", "<<>>", "", kindOther},

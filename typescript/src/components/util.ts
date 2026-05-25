@@ -30,13 +30,20 @@ export function specBadge(status: SpecStatus | undefined): SpecBadge | null {
 /** Provenance badge for a machine-generated spec, distinct from coverage. */
 export interface GenBadge {
   glyph: string;
-  cls: "gen-verified" | "gen-unverified";
+  cls: "gen-verified" | "gen-wellformed" | "gen-unverified";
   title: string;
 }
 
+// Three honest tiers: behavioral (TLC checked an active invariant against real
+// value transitions), well-formed (TLC passed but transitions carry no value
+// semantics — a weak claim), and unverified.
 export function genBadge(spec: SpecRef | undefined): GenBadge | null {
   if (!spec?.generated) return null; // hand-written spec, or no spec
-  return spec.verified
-    ? { glyph: "⚙✓", cls: "gen-verified", title: "Machine-generated; TLC verified the abstract model — not that the Go code conforms" }
-    : { glyph: "⚙✗", cls: "gen-unverified", title: "Machine-generated but NOT verified by TLC — treat as a draft" };
+  if (!spec.verified) {
+    return { glyph: "⚙✗", cls: "gen-unverified", title: "Machine-generated but NOT verified by TLC — treat as a draft" };
+  }
+  if (spec.behavioral) {
+    return { glyph: "⚙✓", cls: "gen-verified", title: "Machine-generated; TLC checked this invariant against real value transitions (the abstract model — not a proof the Go code conforms)" };
+  }
+  return { glyph: "⚙~", cls: "gen-wellformed", title: "Machine-generated and TLC-parseable, but the transitions carry no value semantics — a weak claim, not behavioral verification" };
 }

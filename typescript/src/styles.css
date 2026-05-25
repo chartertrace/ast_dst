@@ -158,7 +158,8 @@
 .dstast-spec-badge.unspecified { color: var(--dstast-unspecified); }
 /* Provenance badges for machine-generated specs: ⚙✓ verified, ⚙✗ unverified. */
 .dstast-spec-badge.gen-verified { color: var(--dstast-validated); width: auto; }
-.dstast-spec-badge.gen-unverified { color: var(--dstast-unchecked); width: auto; }
+.dstast-spec-badge.gen-wellformed { color: var(--dstast-unchecked); width: auto; }
+.dstast-spec-badge.gen-unverified { color: var(--dstast-unspecified); width: auto; }
 .dstast-spec-prov {
   display: flex;
   align-items: center;

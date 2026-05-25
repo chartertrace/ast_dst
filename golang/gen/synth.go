@@ -375,7 +375,9 @@ func tlaTypeOf(goType string) (init, typeOK, kind string) {
 	t := strings.TrimSpace(goType)
 	switch {
 	case reNumeric.MatchString(t):
-		return "0", "0..MaxNat", kindNum
+		// TypeOK uses unbounded Nat (always true); finiteness comes from the
+		// StateBound CONSTRAINT, so a boundary `f' = f + 1` isn't a TypeOK violation.
+		return "0", "Nat", kindNum
 	case t == "bool":
 		return "FALSE", "BOOLEAN", kindBool
 	case t == "string":
