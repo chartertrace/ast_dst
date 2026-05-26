@@ -17,7 +17,7 @@ jobs:
         working-directory: golang
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go }}
       - name: gofmt
@@ -39,7 +39,7 @@ jobs:
         working-directory: golang
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: "stable"
       - uses: actions/setup-java@v4
