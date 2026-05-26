@@ -151,11 +151,20 @@ type StateModel struct {
 
 // StateVar is one component of the state: a struct field or an interface method.
 // Type is the rendered Go type (a field's type, or a method's signature).
+//
+// Via and Unresolved record embedded-struct provenance. A field promoted from an
+// embedded struct carries Via = the dotted embed path it came through (e.g.
+// "Inner" or "A.B"); a directly-declared field leaves it empty. When an embedded
+// field can't be flattened — its type is external/unparsed, an interface, or
+// otherwise unresolvable under go/ast alone — the embed is kept as a single
+// opaque var with Unresolved set to the reason, never silently dropped.
 type StateVar struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
-	Doc  string `json:"doc,omitempty"`
-	Loc  *Loc   `json:"loc,omitempty"`
+	Name       string `json:"name"`
+	Type       string `json:"type"`
+	Doc        string `json:"doc,omitempty"`
+	Via        string `json:"via,omitempty"`        // embed path a promoted field came through
+	Unresolved string `json:"unresolved,omitempty"` // why an embedded type couldn't be flattened
+	Loc        *Loc   `json:"loc,omitempty"`
 }
 
 // SpecRef is the back-reference from a Go invariant to the spec invariant it

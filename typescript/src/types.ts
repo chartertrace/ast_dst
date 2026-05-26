@@ -81,6 +81,8 @@ export interface StateVar {
   name: string;
   type: string;
   doc?: string;
+  via?: string; // embed path a promoted field came through
+  unresolved?: string; // why an embedded type couldn't be flattened
   loc?: Loc;
 }
 

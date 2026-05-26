@@ -118,3 +118,63 @@ func TestExtractStateDisabledByDefault(t *testing.T) {
 		t.Errorf("fixture has no StateServer; expected nil state, got %+v", m.State)
 	}
 }
+
+// TestExtractStateFlattensEmbeds covers the composition-built state case: a value
+// embed and a pointer embed are flattened into promoted fields (with Via set), an
+// external embed it can't resolve is kept opaque (with Unresolved set), and a
+// direct field shadows a same-named promoted one.
+func TestExtractStateFlattensEmbeds(t *testing.T) {
+	t.Parallel()
+	cfg := Config{Root: "testdata/embed", State: StateConfig{TypeName: "World"}}
+	m, err := Extract(cfg)
+	if err != nil {
+		t.Fatalf("Extract: %v", err)
+	}
+	if m.State == nil || m.State.Kind != "struct" {
+		t.Fatalf("expected a struct state model, got %+v", m.State)
+	}
+
+	vars := map[string]StateVar{}
+	for _, v := range m.State.Variables {
+		if _, dup := vars[v.Name]; dup {
+			t.Errorf("var %q appears twice — shadowing should keep only the shallower one", v.Name)
+		}
+		vars[v.Name] = v
+	}
+
+	// Direct fields: present, no Via.
+	for _, name := range []string{"Clock", "Label"} {
+		v, ok := vars[name]
+		if !ok {
+			t.Errorf("missing direct field %q", name)
+		} else if v.Via != "" || v.Unresolved != "" {
+			t.Errorf("direct field %q has Via=%q Unresolved=%q, want both empty", name, v.Via, v.Unresolved)
+		}
+	}
+	// Label is the direct string field, not the promoted Meta.Label (shadowing).
+	if v := vars["Label"]; v.Type != "string" {
+		t.Errorf("Label type = %q, want string (direct field should shadow promoted Meta.Label)", v.Type)
+	}
+
+	// Promoted fields: present, with the embed path in Via.
+	wantVia := map[string]string{"Version": "Meta", "Count": "Audit"}
+	for name, via := range wantVia {
+		v, ok := vars[name]
+		if !ok {
+			t.Errorf("missing promoted field %q (embed not flattened)", name)
+		} else if v.Via != via {
+			t.Errorf("promoted field %q Via = %q, want %q", name, v.Via, via)
+		} else if v.Unresolved != "" {
+			t.Errorf("promoted field %q should be resolved, got Unresolved=%q", name, v.Unresolved)
+		}
+	}
+
+	// External embed (sync.Mutex): kept opaque with an honest reason, never dropped.
+	mu, ok := vars["Mutex"]
+	if !ok {
+		t.Fatal("external embed sync.Mutex was dropped; expected it kept with Unresolved set")
+	}
+	if mu.Unresolved == "" {
+		t.Errorf("Mutex.Unresolved is empty; want a reason it couldn't be flattened")
+	}
+}
