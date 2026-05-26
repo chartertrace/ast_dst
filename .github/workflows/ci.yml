@@ -74,6 +74,8 @@ jobs:
           node-version: "20"
       - name: install deps
         run: npm install
+      - name: lint (accessibility + react-hooks)
+        run: npm run lint
       - name: typecheck
         run: npm run typecheck
       - name: test
