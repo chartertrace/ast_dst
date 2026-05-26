@@ -30,11 +30,16 @@ func RunGenerate(args []string) {
 	module := fs.String("module", "DstSpec", "TLA+ module name (also the file base name)")
 	jar := fs.String("jar", "", "path to tla2tools.jar (else $TLA2TOOLS_JAR or beside the spec)")
 	verify := fs.Bool("verify", true, "verify with SANY+TLC when a JVM + tla2tools.jar are available")
+	requireVerified := fs.Bool("require-verified", false, "exit non-zero unless TLC verified the spec clean (CI gating; implies --verify)")
 	maxNat := fs.Int("max-nat", 2, "bound for numeric state vars (0..N) during TLC; larger = deeper but slower")
 	workers := fs.Int("workers", 2, "TLC parallel workers")
 	timeout := fs.Duration("timeout", 2*time.Minute, "wall-clock budget for verification")
 	indent := fs.Bool("indent", true, "pretty-print JSON")
 	_ = fs.Parse(args)
+
+	if *requireVerified && !*verify {
+		fail("--require-verified cannot be combined with --verify=false")
+	}
 
 	cfg := loadConfig(*configPath, *root)
 	absRoot, err := filepath.Abs(cfg.Root)
@@ -118,6 +123,14 @@ func RunGenerate(args []string) {
 
 	if err := write(*outModel, *indent, out); err != nil {
 		fail("write model: %v", err)
+	}
+
+	// 6. CI gate: when the caller demands verification, a non-verified result
+	// (toolchain absent, SANY/TLC failure, or a violation) is an error. The spec
+	// and model are still written above for inspection; only the exit code
+	// reflects that verification did not pass.
+	if *requireVerified && !res.Verified {
+		fail("--require-verified: spec is not TLC-verified (see the verdict above)")
 	}
 }
 
