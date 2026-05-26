@@ -1,0 +1,5 @@
+{"i":0,"t":1,"op":"Payout","faults":["FaultCreditRace"],"invariants":{"fired":["PAYMENT-1"]}}
+{"i":1,"t":2,"op":"Settle","invariants":{"fired":["PAYMENT-2"]}}
+{"i":2,"t":3,"op":"Tick","writes":{"clock":1}}
+{"i":3,"t":4,"op":"Payout","faults":["FaultCreditRace","FaultClockSkew"],"invariants":{"fired":["PAYMENT-1"],"violated":["PAYMENT-2"]}}
+{"i":4,"t":5,"op":"Tick","invariants":{"violated":["CLOCK-1"]}}

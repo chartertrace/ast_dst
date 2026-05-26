@@ -2,10 +2,11 @@
 // entrypoint and the installable `cmd/astdst` binary so both expose the same two
 // modes:
 //
-//	astdst [flags]              extract the DST model (default)
-//	astdst generate [flags]     generate a TLA+ spec (TLC-verified when the toolchain is present), then extract
-//	astdst structure [flags]    extract a generic Go-structure model of any repo
-//	astdst doctor [flags]       report whether the TLA+ verification toolchain is wired up
+//	astdst [flags]                    extract the DST model (default)
+//	astdst generate [flags]           generate a TLA+ spec (TLC-verified when the toolchain is present), then extract
+//	astdst structure [flags]          extract a generic Go-structure model of any repo
+//	astdst doctor [flags]             report whether the TLA+ verification toolchain is wired up
+//	astdst trace-compact [flags]      compact a DST NDJSON trace into Parquet for the flow viewer
 //
 // With no --config it uses the built-in preset for CharterTrace's
 // primary-server/sim. Point it at any sim-shaped codebase by passing a config
@@ -35,6 +36,10 @@ func Main(args []string) {
 	}
 	if len(args) > 0 && args[0] == "doctor" {
 		RunDoctor(args[1:])
+		return
+	}
+	if len(args) > 0 && args[0] == "trace-compact" {
+		RunTraceCompact(args[1:])
 		return
 	}
 	RunExtract(args)

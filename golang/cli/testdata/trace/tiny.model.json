@@ -1,0 +1,16 @@
+{
+  "operations": [
+    {"index": 0, "name": "Payout"},
+    {"index": 1, "name": "Settle"},
+    {"index": 2, "name": "Tick"}
+  ],
+  "faults": [
+    {"enum": "FaultCreditRace"},
+    {"enum": "FaultClockSkew"}
+  ],
+  "invariants": [
+    {"id": "PAYMENT-1"},
+    {"id": "PAYMENT-2"},
+    {"id": "CLOCK-1"}
+  ]
+}

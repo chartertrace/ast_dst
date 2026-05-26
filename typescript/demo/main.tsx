@@ -54,6 +54,16 @@ const VIEWS: Record<Which, { model: DstModel; tab: string; blurb: ReactNode }> =
   },
 };
 
+// Optional ?tracePath=… URL parameter lets the demo overlay a Parquet trace
+// onto the flow view without editing this file. Produce one with:
+//   cd ../golang && go run ./cmd trace-compact --in trace.ndjson \
+//     --model ../model.json --out ../typescript/demo/public/trace.parquet
+// then open http://localhost:5173/?tracePath=/trace.parquet
+const tracePath =
+  typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("tracePath") ?? undefined
+    : undefined;
+
 function Demo() {
   const [which, setWhich] = useState<Which>("self");
   const view = VIEWS[which];
@@ -100,7 +110,7 @@ function Demo() {
 
       <div style={{ position: "relative", flex: 1, minHeight: 0 }}>
         {/* key on `which` so selection state resets when the model changes. */}
-        <DstAstView key={which} model={view.model} />
+        <DstAstView key={which} model={view.model} tracePath={tracePath} />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import type { DstModel } from "./types";
 import { buildGraph, highlightSet } from "./graph";
 import { OperationList } from "./components/OperationList";
@@ -8,13 +8,25 @@ import { DetailPanel } from "./components/DetailPanel";
 import { GraphView } from "./components/GraphView";
 import "./styles.css";
 
-type ViewMode = "columns" | "graph";
+// FlowView pulls deck.gl, duckdb-wasm and apache-arrow (~500-700 kB gzipped)
+// so it's loaded only when the flow tab opens. Columns + graph stay zero-cost.
+const FlowView = lazy(() =>
+  import("./components/FlowView").then((m) => ({ default: m.FlowView })),
+);
+
+type ViewMode = "columns" | "graph" | "flow";
 
 export interface DstAstViewProps {
   /** The model emitted by the `astdst` Go extractor (model.json). */
   model: DstModel;
   /** Optional extra class on the root, e.g. to override CSS variables. */
   className?: string;
+  /**
+   * Optional URL of a Parquet trace file (produced by `astdst trace-compact`).
+   * When provided, the `flow` view overlays the run's activity onto the
+   * extracted topology. When absent, the flow tab renders an inert placeholder.
+   */
+  tracePath?: string;
 }
 
 /**
@@ -25,7 +37,7 @@ export interface DstAstViewProps {
  *
  * It is fully self-contained: pass the parsed model.json and drop it anywhere.
  */
-export function DstAstView({ model, className }: DstAstViewProps) {
+export function DstAstView({ model, className, tracePath }: DstAstViewProps) {
   const graph = useMemo(() => buildGraph(model), [model]);
   const [selected, setSelected] = useState<string | null>(null);
   const [view, setView] = useState<ViewMode>("columns");
@@ -92,7 +104,7 @@ export function DstAstView({ model, className }: DstAstViewProps) {
           ) : null}
         </div>
         <div className="dstast-viewtoggle" role="group" aria-label="view mode">
-          {(["columns", "graph"] as ViewMode[]).map((m) => (
+          {(["columns", "graph", "flow"] as ViewMode[]).map((m) => (
             <button
               key={m}
               type="button"
@@ -136,7 +148,7 @@ export function DstAstView({ model, className }: DstAstViewProps) {
             onSelect={onSelect}
           />
         </div>
-      ) : (
+      ) : view === "graph" ? (
         <GraphView
           model={model}
           selected={selected}
@@ -144,6 +156,17 @@ export function DstAstView({ model, className }: DstAstViewProps) {
           onSelect={onSelect}
           onClear={() => setSelected(null)}
         />
+      ) : (
+        <Suspense fallback={<div className="dstast-flow"><div className="dstast-flow-legend">loading flow view…</div></div>}>
+          <FlowView
+            model={model}
+            tracePath={tracePath}
+            selected={selected}
+            highlight={highlight}
+            onSelect={onSelect}
+            onClear={() => setSelected(null)}
+          />
+        </Suspense>
       )}
 
       <DetailPanel model={model} selected={selected} onClear={() => setSelected(null)} />
