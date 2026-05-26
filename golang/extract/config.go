@@ -31,6 +31,15 @@ type Config struct {
 	Operations OperationConfig `json:"operations"`
 	TLA        TLAConfig       `json:"tla"`
 	State      StateConfig     `json:"state"`
+
+	// Overrides supplies a TLA+ transition for an operation whose effect the
+	// extractor can't recover syntactically (an opaque/aliased write), keyed by
+	// operation Name. Consumed only by `astdst generate`: the value replaces the
+	// op's synthesised body, e.g. {"UpdateLocation": "loc' = loc + 1"}. It is a
+	// hypothesis, not a fact — TLC still verifies it, and the synthesiser rejects
+	// an override that references unknown identifiers or primes no state variable
+	// (a vacuous override that would pass without constraining anything).
+	Overrides map[string]string `json:"overrides,omitempty"`
 }
 
 // StateConfig names the mutable state type the operations act on, so the TLA+

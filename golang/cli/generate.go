@@ -23,7 +23,7 @@ import (
 // marked unverified. Pass --verify=false to skip the toolchain lookup entirely.
 func RunGenerate(args []string) {
 	fs := flag.NewFlagSet("astdst generate", flag.ExitOnError)
-	root := fs.String("root", "", "codebase root to parse (overrides config; default sim path)")
+	root := fs.String("root", "", "codebase root to parse (overrides config; default: current directory)")
 	configPath := fs.String("config", "", "JSON config file (default: built-in sim preset)")
 	outModel := fs.String("out", "", "model.json output file (default: stdout)")
 	outSpec := fs.String("out-spec", "./generated", "directory to write the generated .tla/.cfg")
@@ -88,6 +88,7 @@ func RunGenerate(args []string) {
 	res, err := gen.Generate(ctx, tc, model, gen.Options{
 		ModuleName: *module,
 		MaxNat:     *maxNat,
+		Overrides:  cfg.Overrides,
 		Workers:    *workers,
 	})
 	if err != nil {
@@ -149,9 +150,13 @@ func writeSpec(dir string, d *gen.Draft) error {
 // the synthesis could and could not recover.
 func reportVerification(res *gen.GenResult, dir string, maxNat int) {
 	r := res.Report
+	overrides := ""
+	if r.Overrides > 0 {
+		overrides = fmt.Sprintf(", %d from overrides", r.Overrides)
+	}
 	fmt.Fprintf(os.Stderr,
-		"astdst: synthesised %d vars (%d typed), %d ops (%d transitions, %d with value forms / %d stub), invariants: %d active / %d reference / %d stub\n",
-		r.Variables, r.Typed, r.Operations, r.Transitions, r.ValueTransitions, r.StubOps, r.ActiveInvs, r.ReferenceInvs, r.StubInvs)
+		"astdst: synthesised %d vars (%d typed), %d ops (%d transitions%s, %d with value forms / %d stub), invariants: %d active / %d reference / %d stub\n",
+		r.Variables, r.Typed, r.Operations, r.Transitions, overrides, r.ValueTransitions, r.StubOps, r.ActiveInvs, r.ReferenceInvs, r.StubInvs)
 	behavioral := res.Verified && r.ActiveInvs > 0 && r.ValueTransitions > 0
 	switch {
 	case res.Verified && behavioral:

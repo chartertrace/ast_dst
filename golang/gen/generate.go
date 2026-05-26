@@ -11,10 +11,11 @@ import (
 
 // Options tunes deterministic generation + verification.
 type Options struct {
-	ModuleName string // TLA+ module / file base name; default "DstSpec"
-	MaxNat     int    // bound for numeric state vars (0..MaxNat); 0 => default
-	Workers    int    // TLC parallel workers
-	ScratchDir string // where the draft is written for checking; temp dir if empty
+	ModuleName string            // TLA+ module / file base name; default "DstSpec"
+	MaxNat     int               // bound for numeric state vars (0..MaxNat); 0 => default
+	Overrides  map[string]string // op name -> TLA+ transition, for unrecoverable effects
+	Workers    int               // TLC parallel workers
+	ScratchDir string            // where the draft is written for checking; temp dir if empty
 }
 
 // GenResult is the outcome: the synthesised draft, the synthesis report, and the
@@ -39,7 +40,7 @@ type GenResult struct {
 // and returned (SANY/TLC nil, Verified false) — the caller writes it marked
 // unverified. Verification is an optional enhancement, not a prerequisite.
 func Generate(ctx context.Context, tc *Toolchain, m *extract.Model, opts Options) (*GenResult, error) {
-	draft, report, err := Synthesize(m, opts.ModuleName, opts.MaxNat)
+	draft, report, err := Synthesize(m, opts.ModuleName, opts.MaxNat, opts.Overrides)
 	if err != nil {
 		return nil, err
 	}

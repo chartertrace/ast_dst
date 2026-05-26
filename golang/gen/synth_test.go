@@ -43,7 +43,7 @@ func sampleModel() *extract.Model {
 
 func TestSynthesizeStructure(t *testing.T) {
 	t.Parallel()
-	d, rep, err := Synthesize(sampleModel(), "Test", 0)
+	d, rep, err := Synthesize(sampleModel(), "Test", 0, nil)
 	if err != nil {
 		t.Fatalf("Synthesize: %v", err)
 	}
@@ -88,8 +88,44 @@ func TestSynthesizeStructure(t *testing.T) {
 
 func TestSynthesizeNoStateErrors(t *testing.T) {
 	t.Parallel()
-	if _, _, err := Synthesize(&extract.Model{}, "X", 0); err == nil {
+	if _, _, err := Synthesize(&extract.Model{}, "X", 0, nil); err == nil {
 		t.Error("expected an error when there is no state model")
+	}
+}
+
+func TestSynthesizeOverrides(t *testing.T) {
+	t.Parallel()
+	// A valid override replaces Tick's recovered body and fills UNCHANGED for the
+	// rest; it counts as an override and a value transition.
+	d, rep, err := Synthesize(sampleModel(), "Test", 0, map[string]string{"Tick": "Clock' = 5"})
+	if err != nil {
+		t.Fatalf("Synthesize with override: %v", err)
+	}
+	if rep.Overrides != 1 {
+		t.Errorf("report Overrides = %d, want 1", rep.Overrides)
+	}
+	for _, want := range []string{"Clock' = 5", "override (config)", "UNCHANGED << active, Balances >>"} {
+		if !strings.Contains(d.TLA, want) {
+			t.Errorf("override TLA missing %q\n---\n%s", want, d.TLA)
+		}
+	}
+
+	cases := []struct {
+		name      string
+		overrides map[string]string
+		wantErr   string
+	}{
+		{"unknown identifier", map[string]string{"Tick": "Clock' = ghost"}, "outside the module's state vocabulary"},
+		{"vacuous (primes nothing)", map[string]string{"Tick": "Clock >= 0"}, "primes no declared state variable"},
+		{"no such operation", map[string]string{"Nope": "Clock' = 1"}, "matches no operation"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			_, _, err := Synthesize(sampleModel(), "Test", 0, c.overrides)
+			if err == nil || !strings.Contains(err.Error(), c.wantErr) {
+				t.Errorf("got err %v, want it to contain %q", err, c.wantErr)
+			}
+		})
 	}
 }
 

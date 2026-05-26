@@ -25,6 +25,7 @@ type SynthReport struct {
 	Transitions      int `json:"transitions"`      // ops with a real (non-stub) transition
 	ValueTransitions int `json:"valueTransitions"` // ops with ≥1 deterministic value form (f' = …)
 	StubOps          int `json:"stubOps"`          // ops left as UNCHANGED (no modellable write)
+	Overrides        int `json:"overrides"`        // ops whose transition came from a config override
 	ActiveInvs       int `json:"activeInvs"`       // invariant predicates active (resolve to declared vars)
 	ReferenceInvs    int `json:"referenceInvs"`    // recovered predicates carried as comments (foreign vocabulary)
 	StubInvs         int `json:"stubInvs"`         // invariants with no recoverable predicate
@@ -48,7 +49,7 @@ const maxNatDefault = 2
 // recoverable predicate is a TODO stub excluded from AllInvariants; and a
 // recovered predicate in another spec's vocabulary is a reference comment, never
 // activated (so SANY stays green).
-func Synthesize(m *extract.Model, moduleName string, maxNat int) (*Draft, *SynthReport, error) {
+func Synthesize(m *extract.Model, moduleName string, maxNat int, overrides map[string]string) (*Draft, *SynthReport, error) {
 	if moduleName == "" {
 		moduleName = "DstSpec"
 	}
@@ -133,6 +134,20 @@ func Synthesize(m *extract.Model, moduleName string, maxNat int) (*Draft, *Synth
 		w("")
 	}
 
+	// An override keyed to no operation is almost always a typo'd name; fail
+	// loudly rather than silently ignore it (gaps render as gaps).
+	if len(overrides) > 0 {
+		known := map[string]bool{}
+		for _, op := range m.Operations {
+			known[op.Name] = true
+		}
+		for opName := range overrides {
+			if !known[opName] {
+				return nil, nil, fmt.Errorf("override for %q matches no operation (known: %s)", opName, strings.Join(opNamesOf(m), ", "))
+			}
+		}
+	}
+
 	// ---- operations -----------------------------------------------------------
 	w(`\* Operations — %d weighted actions, transitions from extracted write sets.`, len(m.Operations))
 	opNames := make([]string, 0, len(m.Operations))
@@ -140,7 +155,18 @@ func Synthesize(m *extract.Model, moduleName string, maxNat int) (*Draft, *Synth
 	for _, op := range m.Operations {
 		name := uniqueIdent(sanitizeIdent(op.Name), usedOps)
 		opNames = append(opNames, name)
-		action, real, value := opAction(name, op, vars, byField)
+		var action string
+		var real, value bool
+		if ov := strings.TrimSpace(overrides[op.Name]); ov != "" {
+			a, val, err := overrideAction(name, ov, vars)
+			if err != nil {
+				return nil, nil, err
+			}
+			action, real, value = a, true, val
+			rep.Overrides++
+		} else {
+			action, real, value = opAction(name, op, vars, byField)
+		}
 		if real {
 			rep.Transitions++
 		} else {
@@ -289,6 +315,62 @@ func opAction(name string, op extract.Operation, vars []synthVar, byField map[st
 		return sb.String(), true, value
 	}
 	return strings.TrimRight(sb.String(), "\n"), true, value
+}
+
+var (
+	rePrimedVar  = regexp.MustCompile(`([A-Za-z_][A-Za-z0-9_]*)'`)
+	reValuePrime = regexp.MustCompile(`[A-Za-z_][A-Za-z0-9_]*'\s*=`) // deterministic assignment f' = …
+)
+
+// overrideAction renders an operation from a config-supplied TLA+ transition — a
+// hypothesis for a write the extractor couldn't recover. The override is spliced
+// in verbatim and TLC is left to judge it; two guards stop it becoming a vacuous
+// green: every identifier must resolve to a declared variable or known TLA+
+// keyword (else the spec won't parse), and it must prime at least one declared
+// variable (else it constrains no transition). UNCHANGED is filled for the rest.
+func overrideAction(name, override string, vars []synthVar) (text string, value bool, err error) {
+	varSet := make(map[string]bool, len(vars))
+	for _, v := range vars {
+		varSet[v.tlaName] = true
+	}
+	if !predicateResolves(override, varSet) {
+		return "", false, fmt.Errorf("override for %q uses identifiers outside the module's state vocabulary (declare them as state or fix the names): %q", name, override)
+	}
+	primed := map[string]bool{}
+	for _, m := range rePrimedVar.FindAllStringSubmatch(override, -1) {
+		if varSet[m[1]] {
+			primed[m[1]] = true
+		}
+	}
+	if len(primed) == 0 {
+		return "", false, fmt.Errorf("override for %q primes no declared state variable — it constrains no transition (vacuous): %q", name, override)
+	}
+
+	var sb strings.Builder
+	sb.WriteString(name + " ==\n")
+	sb.WriteString("    \\* override (config) — a hypothesis, verified by TLC, not recovered from code\n")
+	sb.WriteString("    /\\ " + override + "\n")
+	var rest []string
+	for _, v := range vars {
+		if !primed[v.tlaName] {
+			rest = append(rest, v.tlaName)
+		}
+	}
+	value = reValuePrime.MatchString(override)
+	if len(rest) > 0 {
+		sb.WriteString(fmt.Sprintf("    /\\ UNCHANGED << %s >>", strings.Join(rest, ", ")))
+		return sb.String(), value, nil
+	}
+	return strings.TrimRight(sb.String(), "\n"), value, nil
+}
+
+// opNamesOf lists operation names, for a "no such operation" override error.
+func opNamesOf(m *extract.Model) []string {
+	names := make([]string, len(m.Operations))
+	for i, op := range m.Operations {
+		names[i] = op.Name
+	}
+	return names
 }
 
 // fieldClause renders the primed-variable conjunct for one written field given
