@@ -31,6 +31,29 @@ jobs:
       - name: go test
         run: go test ./...
 
+  tla:
+    name: TLA+ verification (SANY + TLC integration)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: golang
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: fetch tla2tools.jar (pinned + checksum)
+        run: echo "TLA2TOOLS_JAR=$(../scripts/fetch-jar.sh)" >> "$GITHUB_ENV"
+      - name: gen integration tests (un-skipped)
+        # Without java + $TLA2TOOLS_JAR these tests t.Skip, so the headline
+        # "verify with real SANY/TLC" guarantee is otherwise never exercised in
+        # CI. With both present they run for real; -count=1 disables caching.
+        run: go test ./gen/... -count=1 -v
+
   typescript:
     name: TypeScript (viewer + generators)
     runs-on: ubuntu-latest
