@@ -19,6 +19,7 @@ interface SpecView {
   behavioral?: boolean;
   tlcStates?: number;
   tlcDepth?: number;
+  tlcMaxNat?: number;
 }
 
 interface Detail {
@@ -110,6 +111,7 @@ function SpecBlock({ spec }: { spec: SpecView }) {
           {spec.verified && spec.tlcStates ? (
             <span className="dstast-detail-loc">
               {spec.tlcStates} states · depth {spec.tlcDepth ?? 0}
+              {spec.tlcMaxNat ? ` · bounded 0..${spec.tlcMaxNat}` : ""}
             </span>
           ) : null}
         </div>
@@ -167,6 +169,7 @@ function resolve(model: DstModel, nodeId: string): Detail | null {
           behavioral: full?.behavioral ?? inv.spec?.behavioral,
           tlcStates: full?.tlcStates,
           tlcDepth: full?.tlcDepth,
+          tlcMaxNat: full?.tlcMaxNat ?? inv.spec?.tlcMaxNat,
         };
       }
       const invKind = L ? `${inv.truth} · ${L.invariants.toLowerCase()}` : `${inv.truth} invariant`;

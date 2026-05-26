@@ -44,6 +44,15 @@ export interface SpecRef {
   generated?: boolean;
   verified?: boolean;
   behavioral?: boolean;
+  tlcMaxNat?: number;
+}
+
+// One state in a TLC counterexample path: step number, the action that produced
+// it, and each variable's rendered value. Mirrors the Go `gen.TraceState`.
+export interface TraceState {
+  num: number;
+  action?: string;
+  vars: Record<string, string>;
 }
 
 // One invariant declared in a TLA+ specification.
@@ -61,6 +70,9 @@ export interface SpecInvariant {
   behavioral?: boolean;
   tlcStates?: number;
   tlcDepth?: number;
+  tlcMaxNat?: number; // numeric bound (0..N) the TLC search used
+  // Counterexample path when this generated invariant was violated by TLC.
+  counterexample?: TraceState[];
 }
 
 // One component of the mutable state model (TLA+ VARIABLES). Present only when a
@@ -98,6 +110,15 @@ export interface Fault {
   loc?: Loc;
 }
 
+// The recovered shape of a write to one state field, when it matches a simple
+// deterministic form. `op` ∈ {inc, dec, add, sub, setNum, setBool, setStr};
+// `value` is the rendered literal operand for the forms that take one.
+export interface FieldEffect {
+  field: string;
+  op: string;
+  value?: string;
+}
+
 export interface Operation {
   index: number;
   handler: string;
@@ -106,6 +127,12 @@ export interface Operation {
   share: number;
   note?: string;
   faults: string[]; // fault enum names, e.g. "FaultCreditRace"
+  // State-struct field names this handler assigns to (best-effort, syntactic);
+  // the TLA+ generator turns these into the op's transition. Absent when none.
+  writes?: string[];
+  // Refines `writes` with *how* each field changes when recoverable; drives the
+  // generator's value transitions. A field with no recoverable form is absent.
+  effects?: FieldEffect[];
   loc?: Loc;
 }
 
