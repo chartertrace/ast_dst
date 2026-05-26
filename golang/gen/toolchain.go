@@ -35,16 +35,26 @@ const (
 
 // Result is the parsed outcome of one tool invocation.
 type Result struct {
-	Phase    Phase    `json:"phase"`
-	OK       bool     `json:"ok"`                 // tool exited cleanly with no errors
-	Errors   []string `json:"errors,omitempty"`   // parsed error lines, for repair feedback
-	Violated string   `json:"violated,omitempty"` // invariant TLC reported violated
-	Deadlock bool     `json:"deadlock,omitempty"`
-	States   int      `json:"states,omitempty"` // distinct states explored (TLC)
-	Depth    int      `json:"depth,omitempty"`  // search depth reached (TLC)
-	ExitCode int      `json:"exitCode"`
-	TimedOut bool     `json:"timedOut,omitempty"`
-	Raw      string   `json:"-"` // full combined output, for the repair prompt
+	Phase    Phase        `json:"phase"`
+	OK       bool         `json:"ok"`                 // tool exited cleanly with no errors
+	Errors   []string     `json:"errors,omitempty"`   // parsed error lines, for repair feedback
+	Violated string       `json:"violated,omitempty"` // invariant TLC reported violated
+	Deadlock bool         `json:"deadlock,omitempty"`
+	States   int          `json:"states,omitempty"` // distinct states explored (TLC)
+	Depth    int          `json:"depth,omitempty"`  // search depth reached (TLC)
+	Trace    []TraceState `json:"trace,omitempty"`  // counterexample path (violation/deadlock)
+	ExitCode int          `json:"exitCode"`
+	TimedOut bool         `json:"timedOut,omitempty"`
+	Raw      string       `json:"-"` // full combined output, for the repair prompt
+}
+
+// TraceState is one state in a TLC counterexample: the step number, the action
+// that produced it (TLC's label, e.g. "<Tick line 12>"), and each variable's
+// rendered value.
+type TraceState struct {
+	Num    int               `json:"num"`
+	Action string            `json:"action,omitempty"`
+	Vars   map[string]string `json:"vars"`
 }
 
 // TLCOptions bounds a model-checking run so a runaway state space cannot hang
@@ -164,11 +174,19 @@ func (t *Toolchain) run(ctx context.Context, workdir string, args ...string) (ou
 	return out, 0, false, nil
 }
 
+// These patterns track the human-readable output of tla2tools v1.8.0 (the
+// version pinned by scripts/generate-spec.sh). A tools upgrade can reword them;
+// parseTLC's drift guard below turns a silent mismatch into a visible diagnostic.
 var (
 	reTLCStates    = regexp.MustCompile(`(\d+) distinct states found`)
 	reTLCDepth     = regexp.MustCompile(`depth of the complete state graph search is (\d+)`)
 	reTLCViolated  = regexp.MustCompile(`Invariant (\w+) is violated`)
 	reTLCErrorLine = regexp.MustCompile(`(?m)^Error: .*$`)
+	// A trace state header: "State 3: <Tick line 12, col 1 to ...>" or
+	// "State 1: <Initial predicate>".
+	reTLCStateHdr = regexp.MustCompile(`^State (\d+): <?([^>]*)>?`)
+	// A conjunct line inside a state: "/\ clock = 2".
+	reTLCConjunct = regexp.MustCompile(`^/\\ (\w+) = (.+)$`)
 )
 
 // parseTLC turns TLC's output into a Result. OK means the model checker explored
@@ -193,9 +211,59 @@ func parseTLC(out string, code int, timedOut bool) *Result {
 		r.Errors = append(r.Errors, "TLC timed out: the state space is too large; tighten the .cfg bounds (smaller CONSTANT sets, add a CONSTRAINT)")
 		return r
 	}
-	r.OK = code == 0 && r.Violated == "" && !r.Deadlock &&
-		strings.Contains(out, "Model checking completed")
+	if r.Violated != "" || r.Deadlock {
+		r.Trace = parseTLCTrace(out)
+	}
+	completed := strings.Contains(out, "Model checking completed")
+	r.OK = code == 0 && r.Violated == "" && !r.Deadlock && completed
+	// Drift guard: a clean exit with no violation/deadlock but no completion
+	// banner means TLC's output format probably changed under us. Surface it
+	// loudly instead of silently reporting an unverified spec.
+	if code == 0 && r.Violated == "" && !r.Deadlock && !completed {
+		r.Errors = append(r.Errors,
+			"TLC exited 0 without the 'Model checking completed' banner — possible tla2tools version drift; verdict withheld")
+	}
 	return r
+}
+
+// parseTLCTrace extracts TLC's counterexample path: a sequence of "State N: <action>"
+// headers, each followed by "/\ var = value" conjunct lines. Values that span
+// multiple lines (e.g. a function literal) are joined onto the variable they belong to.
+func parseTLCTrace(out string) []TraceState {
+	var trace []TraceState
+	var cur *TraceState
+	var lastVar string
+	for _, raw := range strings.Split(out, "\n") {
+		line := strings.TrimSpace(raw)
+		if m := reTLCStateHdr.FindStringSubmatch(line); m != nil {
+			if cur != nil {
+				trace = append(trace, *cur)
+			}
+			num, _ := strconv.Atoi(m[1])
+			cur = &TraceState{Num: num, Action: strings.TrimSpace(m[2]), Vars: map[string]string{}}
+			lastVar = ""
+			continue
+		}
+		if cur == nil {
+			continue
+		}
+		if line == "" {
+			// A blank line ends the current state's block in TLC output; stop
+			// appending continuations so the trailing summary can't bleed in.
+			lastVar = ""
+			continue
+		}
+		if m := reTLCConjunct.FindStringSubmatch(line); m != nil {
+			cur.Vars[m[1]] = m[2]
+			lastVar = m[1]
+		} else if lastVar != "" {
+			cur.Vars[lastVar] += " " + line // continuation of a multi-line value
+		}
+	}
+	if cur != nil {
+		trace = append(trace, *cur)
+	}
+	return trace
 }
 
 // parseSANY turns SANY's output into a Result. SANY exits 0 only when the module

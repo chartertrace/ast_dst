@@ -43,7 +43,7 @@ func sampleModel() *extract.Model {
 
 func TestSynthesizeStructure(t *testing.T) {
 	t.Parallel()
-	d, rep, err := Synthesize(sampleModel(), "Test")
+	d, rep, err := Synthesize(sampleModel(), "Test", 0)
 	if err != nil {
 		t.Fatalf("Synthesize: %v", err)
 	}
@@ -88,7 +88,7 @@ func TestSynthesizeStructure(t *testing.T) {
 
 func TestSynthesizeNoStateErrors(t *testing.T) {
 	t.Parallel()
-	if _, _, err := Synthesize(&extract.Model{}, "X"); err == nil {
+	if _, _, err := Synthesize(&extract.Model{}, "X", 0); err == nil {
 		t.Error("expected an error when there is no state model")
 	}
 }
@@ -102,10 +102,13 @@ func TestPredicateResolves(t *testing.T) {
 	}{
 		{"Clock >= 0", true},
 		{"balance = Clock", true},
-		// Quantified predicates introduce bound vars (x, a) we can't cheaply tell
-		// from foreign free vars, so they're conservatively treated as reference.
-		{`\A x \in DOMAIN balance: balance[x] >= 0`, false},
-		{`\A a \in Accounts: balance[a] >= 0`, false}, // Accounts is foreign too
+		// Quantifier-bound vars (x) are recognised as local binders, so a predicate
+		// over a declared var (balance) now resolves and can be activated.
+		{`\A x \in DOMAIN balance: balance[x] >= 0`, true},
+		{`\E i \in 1..Clock: i > 0`, true},
+		// A foreign identifier in the set or body still fails, even quantified.
+		{`\A a \in Accounts: balance[a] >= 0`, false},       // Accounts is foreign
+		{`\A x \in DOMAIN balance: foreign[x] >= 0`, false}, // foreign in the body
 		{"TRUE", false}, // no variable referenced
 	}
 	for _, c := range cases {

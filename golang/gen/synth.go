@@ -48,11 +48,14 @@ const maxNatDefault = 2
 // recoverable predicate is a TODO stub excluded from AllInvariants; and a
 // recovered predicate in another spec's vocabulary is a reference comment, never
 // activated (so SANY stays green).
-func Synthesize(m *extract.Model, moduleName string) (*Draft, *SynthReport, error) {
+func Synthesize(m *extract.Model, moduleName string, maxNat int) (*Draft, *SynthReport, error) {
 	if moduleName == "" {
 		moduleName = "DstSpec"
 	}
 	moduleName = sanitizeIdent(moduleName)
+	if maxNat <= 0 {
+		maxNat = maxNatDefault
+	}
 
 	vars := stateVars(m)
 	if len(vars) == 0 {
@@ -217,7 +220,7 @@ func Synthesize(m *extract.Model, moduleName string) (*Draft, *SynthReport, erro
 	}
 	if usesMaxNat {
 		cfgLines = append(cfgLines,
-			fmt.Sprintf("CONSTANT MaxNat = %d", maxNatDefault),
+			fmt.Sprintf("CONSTANT MaxNat = %d", maxNat),
 			"CONSTRAINT StateBound")
 	}
 	cfg := strings.Join(cfgLines, "\n") + "\n"
@@ -416,17 +419,33 @@ var tlaKeywords = map[string]bool{
 var (
 	reIdent       = regexp.MustCompile(`[A-Za-z_][A-Za-z0-9_]*`)
 	reBackslashOp = regexp.MustCompile(`\\[A-Za-z]+`) // \A \E \in \cup \cdot …
+	// reBinder captures the comma-separated identifier list a quantifier or
+	// CHOOSE introduces, e.g. `\A a, b \in S:` or `CHOOSE x \in S:`. Those names
+	// are bound locally, not foreign, so they must count as resolved.
+	reBinder = regexp.MustCompile(`(?:\\(?:AA?|EE?)|\bCHOOSE\b)\s+([A-Za-z_][A-Za-z0-9_,\s]*?)\s+\\in\b`)
 )
 
 // predicateResolves reports whether every identifier in pred is a declared
-// variable or a known TLA+ keyword/operator — i.e. the predicate is expressed
-// over this module's state and can be activated without a SANY error. It is
-// deliberately conservative: backslash operators (\A, \in, …) are stripped, and
-// any other free identifier (including a quantifier-bound variable, which we
-// can't cheaply distinguish from a foreign one) makes the predicate "not
-// resolve", so it is carried as a reference comment rather than risk a SANY
+// variable, a quantifier-bound variable, or a known TLA+ keyword/operator — i.e.
+// the predicate is expressed over this module's state (plus its own local
+// binders) and can be activated without a SANY error. It is deliberately
+// conservative: any free identifier that is none of those makes the predicate
+// "not resolve", so it is carried as a reference comment rather than risk a SANY
 // error. Under-activating is the safe failure mode.
 func predicateResolves(pred string, vars map[string]bool) bool {
+	// Collect quantifier/CHOOSE binders *before* stripping backslash ops, then
+	// treat them as resolved. Work on a local copy so callers' var sets are
+	// untouched.
+	resolved := make(map[string]bool, len(vars))
+	for v := range vars {
+		resolved[v] = true
+	}
+	for _, m := range reBinder.FindAllStringSubmatch(pred, -1) {
+		for _, id := range reIdent.FindAllString(m[1], -1) {
+			resolved[id] = true
+		}
+	}
+
 	pred = reBackslashOp.ReplaceAllString(pred, " ")
 	idents := reIdent.FindAllString(pred, -1)
 	if len(idents) == 0 {
@@ -438,10 +457,10 @@ func predicateResolves(pred string, vars map[string]bool) bool {
 			sawVar = true
 			continue
 		}
-		if tlaKeywords[id] {
+		if resolved[id] || tlaKeywords[id] {
 			continue
 		}
-		return false // a free identifier that is neither a var nor a keyword
+		return false // a free identifier that is neither a var/binder nor a keyword
 	}
 	return sawVar
 }

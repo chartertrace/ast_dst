@@ -124,6 +124,19 @@ type SpecInvariant struct {
 	Behavioral bool `json:"behavioral,omitempty"`
 	TLCStates  int  `json:"tlcStates,omitempty"`
 	TLCDepth   int  `json:"tlcDepth,omitempty"`
+	TLCMaxNat  int  `json:"tlcMaxNat,omitempty"` // numeric bound (0..N) the TLC search used
+	// Counterexample is the trace TLC produced when this generated invariant was
+	// violated, denormalised here so the viewer can render the failing path.
+	Counterexample []TraceState `json:"counterexample,omitempty"`
+}
+
+// TraceState is one state in a TLC counterexample path: step number, the action
+// that produced it, and each variable's rendered value. Mirrors gen.TraceState
+// (kept here to avoid an extract→gen import cycle).
+type TraceState struct {
+	Num    int               `json:"num"`
+	Action string            `json:"action,omitempty"`
+	Vars   map[string]string `json:"vars"`
 }
 
 // StateModel is the mutable state the operations act on, the basis for the TLA+
@@ -157,6 +170,7 @@ type SpecRef struct {
 	Generated  bool `json:"generated,omitempty"`
 	Verified   bool `json:"verified,omitempty"`
 	Behavioral bool `json:"behavioral,omitempty"`
+	TLCMaxNat  int  `json:"tlcMaxNat,omitempty"`
 }
 
 // Fault is one injectable failure mode. Enum is the Go constant name; ID is the

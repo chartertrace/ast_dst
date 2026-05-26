@@ -219,19 +219,26 @@ func buildEdges(m *Model) []Edge {
 // a model whose TLA+ spec was produced by package gen, so the viewer can badge
 // generated/verified specs. verified must be the TLC outcome — never set true for
 // a spec TLC did not check clean.
-func MarkGenerated(m *Model, verified, behavioral bool, tlcStates, tlcDepth int) {
+// violated names the spec invariant TLC reported violated (empty if none); trace
+// is its counterexample path, stamped only onto that invariant.
+func MarkGenerated(m *Model, verified, behavioral bool, tlcStates, tlcDepth, tlcMaxNat int, violated string, trace []TraceState) {
 	for i := range m.Specs {
 		m.Specs[i].Generated = true
 		m.Specs[i].Verified = verified
 		m.Specs[i].Behavioral = behavioral
 		m.Specs[i].TLCStates = tlcStates
 		m.Specs[i].TLCDepth = tlcDepth
+		m.Specs[i].TLCMaxNat = tlcMaxNat
+		if violated != "" && m.Specs[i].Name == violated {
+			m.Specs[i].Counterexample = trace
+		}
 	}
 	for i := range m.Invariants {
 		if ref := m.Invariants[i].Spec; ref != nil {
 			ref.Generated = true
 			ref.Verified = verified
 			ref.Behavioral = behavioral
+			ref.TLCMaxNat = tlcMaxNat
 		}
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -44,6 +45,56 @@ Error: The behavior up to this point is:
 	}
 	if len(r.Errors) == 0 {
 		t.Error("expected error lines for repair feedback")
+	}
+}
+
+func TestParseTLCTrace(t *testing.T) {
+	t.Parallel()
+	out := `Error: Invariant ClockNonNeg is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ clock = 0
+/\ active = FALSE
+
+State 2: <Tick line 12, col 1 to line 12, col 30 of module DstSpec>
+/\ clock = 1
+/\ active = TRUE
+
+110 states generated, 58 distinct states found.`
+	r := parseTLC(out, 12, false)
+	if r.Violated != "ClockNonNeg" {
+		t.Fatalf("Violated = %q, want ClockNonNeg", r.Violated)
+	}
+	if len(r.Trace) != 2 {
+		t.Fatalf("Trace length = %d, want 2 (%+v)", len(r.Trace), r.Trace)
+	}
+	if r.Trace[0].Num != 1 || r.Trace[0].Vars["clock"] != "0" || r.Trace[0].Vars["active"] != "FALSE" {
+		t.Errorf("state 1 wrong: %+v", r.Trace[0])
+	}
+	if r.Trace[1].Num != 2 || r.Trace[1].Vars["clock"] != "1" || r.Trace[1].Vars["active"] != "TRUE" {
+		t.Errorf("state 2 wrong: %+v", r.Trace[1])
+	}
+	if !strings.HasPrefix(r.Trace[1].Action, "Tick") {
+		t.Errorf("state 2 action = %q, want it to start with Tick", r.Trace[1].Action)
+	}
+}
+
+// A clean exit with no violation but no completion banner means the output format
+// drifted; the verdict must be withheld (not silently OK) and a diagnostic raised.
+func TestParseTLCDriftGuard(t *testing.T) {
+	t.Parallel()
+	r := parseTLC("TLC2 Version 2.20\nSome new banner we don't recognise\n", 0, false)
+	if r.OK {
+		t.Error("missing completion banner must not be OK")
+	}
+	found := false
+	for _, e := range r.Errors {
+		if strings.Contains(e, "version drift") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected a drift diagnostic, got %v", r.Errors)
 	}
 }
 
@@ -148,5 +199,8 @@ func TestTLCVerifiesGoodCatchesBad(t *testing.T) {
 	}
 	if r.Violated != "Inv" {
 		t.Errorf("expected Inv violated, got %q (%+v)", r.Violated, r.Errors)
+	}
+	if len(r.Trace) == 0 {
+		t.Error("a violation should carry a counterexample trace")
 	}
 }

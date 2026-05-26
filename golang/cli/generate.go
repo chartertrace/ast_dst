@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/chartertrace/ast_dst/golang/extract"
@@ -28,6 +30,7 @@ func RunGenerate(args []string) {
 	module := fs.String("module", "DstSpec", "TLA+ module name (also the file base name)")
 	jar := fs.String("jar", "", "path to tla2tools.jar (else $TLA2TOOLS_JAR or beside the spec)")
 	verify := fs.Bool("verify", true, "verify with SANY+TLC when a JVM + tla2tools.jar are available")
+	maxNat := fs.Int("max-nat", 2, "bound for numeric state vars (0..N) during TLC; larger = deeper but slower")
 	workers := fs.Int("workers", 2, "TLC parallel workers")
 	timeout := fs.Duration("timeout", 2*time.Minute, "wall-clock budget for verification")
 	indent := fs.Bool("indent", true, "pretty-print JSON")
@@ -79,6 +82,7 @@ func RunGenerate(args []string) {
 	}
 	res, err := gen.Generate(ctx, tc, model, gen.Options{
 		ModuleName: *module,
+		MaxNat:     *maxNat,
 		Workers:    *workers,
 	})
 	if err != nil {
@@ -89,7 +93,7 @@ func RunGenerate(args []string) {
 	if err := writeSpec(*outSpec, res.Draft); err != nil {
 		fail("write spec: %v", err)
 	}
-	reportVerification(res, *outSpec)
+	reportVerification(res, *outSpec, *maxNat)
 
 	// 5. Re-extract with the generated spec bound in, stamp provenance, emit.
 	cfg.TLA.SpecDir = *outSpec
@@ -100,13 +104,17 @@ func RunGenerate(args []string) {
 		fail("re-extract with generated spec: %v", err)
 	}
 	states, depth := 0, 0
+	violated := ""
+	var trace []extract.TraceState
 	if res.TLC != nil {
 		states, depth = res.TLC.States, res.TLC.Depth
+		violated = res.TLC.Violated
+		trace = toExtractTrace(res.TLC.Trace)
 	}
 	// Behavioral = TLC checked a real value transition against an active invariant,
 	// so the ✓ means more than "well-formed".
 	behavioral := res.Verified && res.Report.ActiveInvs > 0 && res.Report.ValueTransitions > 0
-	extract.MarkGenerated(out, res.Verified, behavioral, states, depth)
+	extract.MarkGenerated(out, res.Verified, behavioral, states, depth, *maxNat, violated, trace)
 
 	if err := write(*outModel, *indent, out); err != nil {
 		fail("write model: %v", err)
@@ -126,7 +134,7 @@ func writeSpec(dir string, d *gen.Draft) error {
 
 // reportVerification prints an honest one-line verdict to stderr, including what
 // the synthesis could and could not recover.
-func reportVerification(res *gen.GenResult, dir string) {
+func reportVerification(res *gen.GenResult, dir string, maxNat int) {
 	r := res.Report
 	fmt.Fprintf(os.Stderr,
 		"astdst: synthesised %d vars (%d typed), %d ops (%d transitions, %d with value forms / %d stub), invariants: %d active / %d reference / %d stub\n",
@@ -135,16 +143,18 @@ func reportVerification(res *gen.GenResult, dir string) {
 	switch {
 	case res.Verified && behavioral:
 		fmt.Fprintf(os.Stderr,
-			"astdst: ✓ VERIFIED by TLC (behavioral: %d active invariant(s) checked against value transitions over %d states) → %s\n",
-			r.ActiveInvs+1, res.TLC.States, dir)
+			"astdst: ✓ VERIFIED by TLC (behavioral: %d active invariant(s) checked against value transitions over %d states, bounded 0..%d) → %s\n",
+			r.ActiveInvs+1, res.TLC.States, maxNat, dir)
 	case res.Verified:
 		fmt.Fprintf(os.Stderr,
-			"astdst: ✓ verified WELL-FORMED by TLC (parses + holds over the modelled states, but transitions carry no value semantics — a weak claim) → %s\n",
-			dir)
+			"astdst: ✓ verified WELL-FORMED by TLC (parses + holds over the modelled states, bounded 0..%d, but transitions carry no value semantics — a weak claim) → %s\n",
+			maxNat, dir)
 	case res.SANY != nil && !res.SANY.OK:
 		fmt.Fprintf(os.Stderr, "astdst: ✗ UNVERIFIED — spec failed to parse (SANY) → %s\n", dir)
 	case res.TLC != nil && res.TLC.Violated != "":
-		fmt.Fprintf(os.Stderr, "astdst: ✗ UNVERIFIED — invariant %s does not hold at the initial state → %s\n", res.TLC.Violated, dir)
+		fmt.Fprintf(os.Stderr, "astdst: ✗ UNVERIFIED — invariant %s violated (%d-step trace) → %s\n",
+			res.TLC.Violated, len(res.TLC.Trace), dir)
+		reportTrace(res.TLC.Trace)
 	case res.TLC != nil && res.TLC.TimedOut:
 		fmt.Fprintf(os.Stderr, "astdst: ✗ UNVERIFIED — TLC timed out → %s\n", dir)
 	case res.SANY == nil && res.TLC == nil:
@@ -154,4 +164,39 @@ func reportVerification(res *gen.GenResult, dir string) {
 	default:
 		fmt.Fprintf(os.Stderr, "astdst: ✗ UNVERIFIED → %s\n", dir)
 	}
+}
+
+// reportTrace prints the counterexample path's final state (the most actionable
+// part) to stderr; the full path is preserved in model.json's counterexample.
+func reportTrace(trace []gen.TraceState) {
+	if len(trace) == 0 {
+		return
+	}
+	last := trace[len(trace)-1]
+	keys := make([]string, 0, len(last.Vars))
+	for k := range last.Vars {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	var b strings.Builder
+	for i, k := range keys {
+		if i > 0 {
+			b.WriteString(", ")
+		}
+		fmt.Fprintf(&b, "%s = %s", k, last.Vars[k])
+	}
+	fmt.Fprintf(os.Stderr, "astdst:   failing state (step %d): %s\n", last.Num, b.String())
+}
+
+// toExtractTrace converts gen.TraceState to the extract package's mirror type so
+// it can be stamped into model.json without an extract→gen import cycle.
+func toExtractTrace(trace []gen.TraceState) []extract.TraceState {
+	if len(trace) == 0 {
+		return nil
+	}
+	out := make([]extract.TraceState, len(trace))
+	for i, s := range trace {
+		out[i] = extract.TraceState{Num: s.Num, Action: s.Action, Vars: s.Vars}
+	}
+	return out
 }
