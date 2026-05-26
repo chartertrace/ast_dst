@@ -70,3 +70,50 @@ describe("Go model.go ↔ TS types.ts schema agreement", () => {
     });
   }
 });
+
+// goConstValues returns the string values of `Name = "value"` consts whose name
+// starts with prefix — the Go side of an enum-like wire contract.
+function goConstValues(src: string, prefix: string): Set<string> {
+  const out = new Set<string>();
+  const re = new RegExp(`\\b${prefix}\\w+\\s*=\\s*"([^"]+)"`, "g");
+  for (let m = re.exec(src); m; m = re.exec(src)) out.add(m[1]);
+  return out;
+}
+
+// tsUnionMembers returns the string-literal members of `export type Name = ...;`.
+function tsUnionMembers(src: string, name: string): Set<string> {
+  const out = new Set<string>();
+  const block = src.match(new RegExp(`export type ${name}\\s*=([^;]*);`));
+  if (block) {
+    const lit = /"([^"]+)"/g;
+    for (let m = lit.exec(block[1]); m; m = lit.exec(block[1])) out.add(m[1]);
+  }
+  return out;
+}
+
+// The struct fields are tied above; these are the enum-like *string* contracts
+// the viewer switches on (edge.kind, invariant.specStatus). The Go consts and
+// the TS union literals must name the same set, or the viewer mishandles a value
+// the extractor emits.
+describe("Go enum constants ↔ TS union literals", () => {
+  const cases = [
+    { go: "Edge", ts: "EdgeKind" },
+    { go: "Spec", ts: "SpecStatus" },
+  ];
+  for (const { go, ts } of cases) {
+    it(`${go}* consts == TS ${ts} union`, () => {
+      const goVals = goConstValues(modelGo, go);
+      const tsVals = tsUnionMembers(typesTs, ts);
+      expect(goVals.size, `no Go ${go}* string consts found`).toBeGreaterThan(0);
+      expect(tsVals.size, `no TS ${ts} union found`).toBeGreaterThan(0);
+      expect(
+        [...goVals].filter((v) => !tsVals.has(v)),
+        `TS ${ts} is missing value(s) the Go ${go}* consts define`,
+      ).toEqual([]);
+      expect(
+        [...tsVals].filter((v) => !goVals.has(v)),
+        `TS ${ts} has value(s) with no matching Go ${go}* const`,
+      ).toEqual([]);
+    });
+  }
+});
