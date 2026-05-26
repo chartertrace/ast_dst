@@ -151,15 +151,17 @@ comment plus the `file:line` it was parsed from.
 
 ## Generate TLA+ and docs from the model
 
-The same `model.json` drives two TypeScript generators (no Go changes — the
-model already carries the predicates, weights, and edges they need). See
+The same `model.json` drives three TypeScript generators (no Go changes — the
+model already carries the predicates, weights, and edges they need). Spec
+*synthesis* (VARIABLES/Init/Next + invariants, verified with SANY/TLC) is owned
+by the Go `astdst generate` above — the TS side never re-synthesises a spec. See
 [`typescript/README.md`](typescript/README.md):
 
 ```bash
 cd typescript && npm install
-npm run gen:reconcile -- --in sample/model.json --strict   # spec↔Go drift (CI gate)
-npm run gen:tla       -- --in sample/model.json --out tla-gen   # *.tla + *.cfg + TraceSpec
-npm run gen:docs      -- --in sample/model.json --out site      # static godoc-style site
+npm run gen:reconcile -- --in sample/model.json --strict        # spec↔Go drift (CI gate)
+npm run gen:trace     -- --in sample/model.json --out tla-gen --base PayoutFlowGen   # <base>Trace.tla + .cfg
+npm run gen:docs      -- --in sample/model.json --out site       # static godoc-style site
 ```
 
 - **`gen:reconcile`** is the cheapest, highest-leverage check (Stage 1 of the
@@ -167,15 +169,13 @@ npm run gen:docs      -- --in sample/model.json --out site      # static godoc-s
   three drift sets — *runtime gap* (model-checked but no Go checker, the blocking
   one under `--strict`), *spec rot* (declared in `.tla` but not in the `.cfg`
   set), and *sim-only* (Go checker with no TLA+ counterpart).
-- **`gen:tla`** emits a TLA+ scaffold that *parses* (SANY syntax phase): invariant
-  predicates filled in from the model (verbatim spec predicate, else the glyph-
-  converted doc block). Doc predicates that use non-TLA+ math (`|S|` cardinality,
-  `∑`) become commented "transcribe by hand" stubs so the module still parses.
-  `CONSTANTS`/`VARIABLES`/`Init`/`Next` are `TODO`, so semantic checks and TLC only
-  run once you declare the state. Gaps stay gaps — an invariant with no predicate
-  becomes a `TRUE` stub, never an invented one. It also writes a `*Trace.tla`/`.cfg`
+- **`gen:trace`** writes the one piece the Go generator doesn't: a `<base>Trace.tla`/`.cfg`
   **trace-validation scaffold** (Cirstea/Kuppe/Loillier/Merz, SEFM 2024; etcd-io/
-  raft PR #113) ready to replay NDJSON DST traces.
+  raft PR #113). It `EXTENDS` `--base` (normally the module `astdst generate`
+  produced), reads an NDJSON trace, composes one `IsEvent("Op") \cdot Op` per
+  operation, and accepts once TLC has consumed the whole trace. Fill in
+  `UpdateVariables` and emit `{"event":"<OpName>",…}` lines from the DST harness to
+  replay real runs against the spec.
 - **`gen:docs`** renders a `pkg.go.dev`-style static site (overview + per-symbol
   pages + a coverage/drift report) that embeds the interactive `<DstAstView/>` viewer.
 

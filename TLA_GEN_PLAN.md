@@ -66,7 +66,7 @@ SANY/TLC toolchain — were kept.
 - **Trace validation is the next roadmap step and is *not* built.** Emitting
   NDJSON traces from DST runs and replaying them against a `TraceSpec` (Cirstea/
   Kuppe/Loillier/Merz, SEFM 2024; etcd-io/raft PR #113) is what would actually
-  test that the Go code *refines* the spec. `gen:tla` already emits a
+  test that the Go code *refines* the spec. `gen:trace` already emits a
   `*Trace.tla`/`.cfg` scaffold toward this. Expect **atomicity alignment** (one
   spec step ↔ several program steps) to be the dominant cost.
 - **Soundness scope (now stated in the viewer + README).** A generated spec

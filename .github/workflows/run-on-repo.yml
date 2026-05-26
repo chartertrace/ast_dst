@@ -47,12 +47,18 @@ jobs:
           node-version: "20"
 
       - name: Run ast_dst on the target repo
+        # Inputs are passed through env, never interpolated into the shell body,
+        # so a crafted `repo`/`ref` value can't inject commands into the runner.
+        env:
+          REPO: ${{ inputs.repo }}
+          REF: ${{ inputs.ref }}
+          EXPORTED_ONLY: ${{ inputs.exported_only }}
         run: |
-          ./scripts/run-on-repo.sh \
-            "${{ inputs.repo }}" \
-            ${{ inputs.ref && format('"{0}"', inputs.ref) || '' }} \
-            --out ./site \
-            ${{ inputs.exported_only && '--exported-only' || '' }}
+          args=()
+          [ -n "$REF" ] && args+=("$REF")
+          args+=(--out ./site)
+          [ "$EXPORTED_ONLY" = "true" ] && args+=(--exported-only)
+          ./scripts/run-on-repo.sh "$REPO" "${args[@]}"
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
