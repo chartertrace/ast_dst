@@ -22,9 +22,6 @@ import (
 	"github.com/chartertrace/ast_dst/golang/extract"
 )
 
-// defaultRoot is used when neither --root nor a config supplies one.
-const defaultRoot = "../../primary-server/sim"
-
 // Main is the command entrypoint: it dispatches the "generate" subcommand and
 // otherwise runs the default structural extraction.
 func Main(args []string) {
@@ -46,7 +43,7 @@ func Main(args []string) {
 // RunExtract parses a codebase and emits the structural model.
 func RunExtract(args []string) {
 	fs := flag.NewFlagSet("astdst", flag.ExitOnError)
-	root := fs.String("root", "", "codebase root to parse (overrides config; default sim path)")
+	root := fs.String("root", "", "codebase root to parse (overrides config; default: current directory)")
 	configPath := fs.String("config", "", "JSON config file (default: built-in sim preset)")
 	out := fs.String("out", "", "output file (default: stdout)")
 	indent := fs.Bool("indent", true, "pretty-print JSON")
@@ -102,7 +99,18 @@ func warnUnresolved(cfg extract.Config, m *extract.Model) {
 	}
 }
 
-// loadConfig resolves the config the same way for both subcommands.
+// loadConfig resolves the config the same way for both subcommands. With neither
+// --root nor a config-supplied root, it defaults to the current directory, so the
+// tool runs on whatever repo you invoke it in; if that holds no Go files the
+// extractor errors loudly ("no Go files found under …") rather than silently
+// analysing a path the user never chose.
+//
+// When no --config is given we fall back to the built-in sim preset's *names*
+// but drop its package allowlist (catalog/engine/state): those dirs only exist
+// in CharterTrace's sim, and demanding them would make a bare run on any other
+// repo fail outright instead of degrading. With no allowlist the extractor scans
+// the whole tree, finds no sim-shaped declarations, and reports an honest empty
+// model (warnUnresolved explains which configured names matched nothing).
 func loadConfig(configPath, root string) extract.Config {
 	cfg := extract.DefaultConfig()
 	if configPath != "" {
@@ -111,12 +119,14 @@ func loadConfig(configPath, root string) extract.Config {
 			fail("config: %v", err)
 		}
 		cfg = loaded
+	} else {
+		cfg.Packages = nil
 	}
 	if root != "" {
 		cfg.Root = root
 	}
 	if cfg.Root == "" {
-		cfg.Root = defaultRoot
+		cfg.Root = "."
 	}
 	return cfg
 }
