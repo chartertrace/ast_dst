@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from "react";
 import type { SpecRef, SpecStatus } from "../types";
 
 /** Shared row className builder for the selectable list rows. */
@@ -5,6 +6,20 @@ export function rowClass(selected: boolean, dim: boolean): string {
   return ["dstast-row", selected ? "selected" : "", dim ? "dim" : ""]
     .filter(Boolean)
     .join(" ");
+}
+
+/**
+ * Keyboard activation for clickable elements that aren't native <button>s (e.g.
+ * the tree caret/heading spans), so Enter and Space fire the same handler as a
+ * click. Pair with role="button" + tabIndex={0}.
+ */
+export function keyActivate(handler: () => void) {
+  return (e: KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handler();
+    }
+  };
 }
 
 /** How a spec-coverage status renders: glyph, CSS modifier, and tooltip. */

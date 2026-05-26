@@ -44,7 +44,8 @@ export function buildGraph(model: DstModel): Graph {
 
   const opsByFaultId = new Map<string, Operation[]>();
   for (const op of model.operations) {
-    for (const enumName of op.faults) {
+    // `structure` mode emits faults: null; guard so the graph still builds.
+    for (const enumName of op.faults ?? []) {
       const id = faultIdByEnum.get(enumName);
       if (!id) continue;
       if (!opsByFaultId.has(id)) opsByFaultId.set(id, []);

@@ -35,6 +35,8 @@ export function FaultList({ faults, opsByFaultId, label, selected, highlight, on
               key={id}
               type="button"
               className={rowClass(id === selected, dim)}
+              aria-pressed={id === selected}
+              aria-label={`fault ${f.label}, injected by ${injectors} operation${injectors === 1 ? "" : "s"}`}
               onClick={() => onSelect(id)}
             >
               <div className="dstast-row-top">

@@ -36,6 +36,8 @@ export function OperationList({ operations, faultByEnum, label, selected, highli
               key={id}
               type="button"
               className={rowClass(id === selected, dim)}
+              aria-pressed={id === selected}
+              aria-label={`operation ${op.name}`}
               onClick={() => onSelect(id)}
             >
               <div className="dstast-row-top">

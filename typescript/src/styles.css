@@ -15,6 +15,7 @@
   --dstast-fault: #fca5a5;
   --dstast-inv: #86efac;
   --dstast-truth: #c4b5fd;
+  --dstast-spec: #fbbf24;
   --dstast-dim: 0.28;
   --dstast-validated: #86efac;
   --dstast-unchecked: #fbbf24;
@@ -219,6 +220,122 @@
   border: 1px solid var(--dstast-border);
   border-radius: 6px;
   padding: 2px 8px;
+  cursor: pointer;
+}
+
+/* ---- keyboard focus (visible only for keyboard users) -------------------- */
+.dstast-row:focus-visible,
+.dstast-viewtoggle-btn:focus-visible,
+.dstast-truth-head [role="button"]:focus-visible,
+.dstast-legend-reset:focus-visible,
+.dstast-clear:focus-visible {
+  outline: 2px solid var(--dstast-accent);
+  outline-offset: 1px;
+  border-radius: 6px;
+}
+/* Graph nodes are <g>; ring the circle instead of a box outline. */
+.dstast-gnode-g:focus-visible { outline: none; }
+.dstast-gnode-g:focus-visible .dstast-gnode { stroke: var(--dstast-accent); stroke-width: 3; }
+
+/* ---- view-mode toggle (Columns | Graph) ---------------------------------- */
+.dstast-viewtoggle {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid var(--dstast-border);
+  border-radius: 7px;
+  overflow: hidden;
+}
+.dstast-viewtoggle-btn {
+  font: inherit;
+  font-size: 12px;
+  text-transform: capitalize;
+  color: var(--dstast-muted);
+  background: transparent;
+  border: 0;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+.dstast-viewtoggle-btn + .dstast-viewtoggle-btn { border-left: 1px solid var(--dstast-border); }
+.dstast-viewtoggle-btn.is-active { background: var(--dstast-panel-2); color: var(--dstast-text); }
+
+/* ---- node-link graph view ------------------------------------------------ */
+.dstast-graph {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--dstast-border);
+  border-radius: 10px;
+  background: var(--dstast-panel);
+  overflow: hidden;
+}
+.dstast-graph-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+.dstast-graph-svg:active { cursor: grabbing; }
+
+.dstast-gedge { stroke: var(--dstast-border); stroke-width: 1; }
+.dstast-gedge-op-injects-fault { stroke: var(--dstast-fault); }
+.dstast-gedge-truth-has-invariant { stroke: var(--dstast-truth); }
+.dstast-gedge-validates { stroke: var(--dstast-inv); }
+.dstast-gedge-mentions-invariant { stroke: var(--dstast-accent); stroke-dasharray: 3 3; }
+
+.dstast-gnode-g { cursor: pointer; }
+.dstast-gnode { stroke: var(--dstast-bg); stroke-width: 1.5; }
+.dstast-gnode.is-selected { stroke: var(--dstast-text); stroke-width: 2.5; }
+.dstast-gnode-op { fill: var(--dstast-op); }
+.dstast-gnode-fault { fill: var(--dstast-fault); }
+.dstast-gnode-inv { fill: var(--dstast-inv); }
+.dstast-gnode-truth { fill: var(--dstast-truth); }
+.dstast-gnode-spec { fill: var(--dstast-spec); }
+.dstast-glabel {
+  fill: var(--dstast-text);
+  font-size: 10px;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: var(--dstast-bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.dstast-graph-legend {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  max-width: calc(100% - 20px);
+  justify-content: flex-end;
+  padding: 6px 9px;
+  font-size: 11px;
+  color: var(--dstast-muted);
+  background: color-mix(in srgb, var(--dstast-panel) 85%, transparent);
+  border: 1px solid var(--dstast-border);
+  border-radius: 8px;
+}
+.dstast-legend-item { display: inline-flex; align-items: center; gap: 4px; text-transform: capitalize; }
+.dstast-legend-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+/* The dot is an HTML span, so it needs background (the SVG `fill` rules above
+   don't apply); reuse the same per-kind palette. */
+.dstast-legend-dot.dstast-gnode-op { background: var(--dstast-op); }
+.dstast-legend-dot.dstast-gnode-fault { background: var(--dstast-fault); }
+.dstast-legend-dot.dstast-gnode-inv { background: var(--dstast-inv); }
+.dstast-legend-dot.dstast-gnode-truth { background: var(--dstast-truth); }
+.dstast-legend-dot.dstast-gnode-spec { background: var(--dstast-spec); }
+.dstast-legend-hint { color: var(--dstast-muted); opacity: 0.8; }
+.dstast-legend-reset {
+  font: inherit;
+  font-size: 11px;
+  color: var(--dstast-muted);
+  background: transparent;
+  border: 1px solid var(--dstast-border);
+  border-radius: 6px;
+  padding: 1px 8px;
   cursor: pointer;
 }
 .dstast-clear:hover { color: var(--dstast-text); border-color: var(--dstast-accent); }

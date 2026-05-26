@@ -1,11 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { DstModel } from "./types";
 import { buildGraph, highlightSet } from "./graph";
 import { OperationList } from "./components/OperationList";
 import { FaultList } from "./components/FaultList";
 import { InvariantTree } from "./components/InvariantTree";
 import { DetailPanel } from "./components/DetailPanel";
+import { GraphView } from "./components/GraphView";
 import "./styles.css";
+
+type ViewMode = "columns" | "graph";
 
 export interface DstAstViewProps {
   /** The model emitted by the `astdst` Go extractor (model.json). */
@@ -25,10 +28,21 @@ export interface DstAstViewProps {
 export function DstAstView({ model, className }: DstAstViewProps) {
   const graph = useMemo(() => buildGraph(model), [model]);
   const [selected, setSelected] = useState<string | null>(null);
+  const [view, setView] = useState<ViewMode>("columns");
   const highlight = useMemo(() => highlightSet(graph, selected), [graph, selected]);
 
   const onSelect = (nodeId: string) =>
     setSelected((cur) => (cur === nodeId ? null : nodeId));
+
+  // Escape clears the current selection (and its highlight), wherever focus is.
+  useEffect(() => {
+    if (!selected) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelected(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selected]);
 
   // Display labels: the DST defaults, or the model's own (e.g. `structure` mode).
   const L = model.meta?.labels;
@@ -77,35 +91,60 @@ export function DstAstView({ model, className }: DstAstViewProps) {
             </span>
           ) : null}
         </div>
+        <div className="dstast-viewtoggle" role="group" aria-label="view mode">
+          {(["columns", "graph"] as ViewMode[]).map((m) => (
+            <button
+              key={m}
+              type="button"
+              aria-pressed={view === m}
+              aria-label={`${m} view`}
+              className={`dstast-viewtoggle-btn${view === m ? " is-active" : ""}`}
+              onClick={() => setView(m)}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
       </header>
 
-      <div className="dstast-columns">
-        <OperationList
-          operations={model.operations}
-          faultByEnum={graph.faultByEnum}
-          label={L?.operations ?? "Operations"}
+      {view === "columns" ? (
+        <div className="dstast-columns" role="group" aria-label="operations, faults and invariants">
+
+          <OperationList
+            operations={model.operations}
+            faultByEnum={graph.faultByEnum}
+            label={L?.operations ?? "Operations"}
+            selected={selected}
+            highlight={highlight}
+            onSelect={onSelect}
+          />
+          <FaultList
+            faults={model.faults}
+            opsByFaultId={graph.opsByFaultId}
+            label={L?.faults ?? "Faults"}
+            selected={selected}
+            highlight={highlight}
+            onSelect={onSelect}
+          />
+          <InvariantTree
+            truths={model.truths}
+            invariants={model.invariants}
+            label={L?.invariants ?? "Invariants"}
+            groupLabel={L?.truths ?? "truths"}
+            selected={selected}
+            highlight={highlight}
+            onSelect={onSelect}
+          />
+        </div>
+      ) : (
+        <GraphView
+          model={model}
           selected={selected}
           highlight={highlight}
           onSelect={onSelect}
+          onClear={() => setSelected(null)}
         />
-        <FaultList
-          faults={model.faults}
-          opsByFaultId={graph.opsByFaultId}
-          label={L?.faults ?? "Faults"}
-          selected={selected}
-          highlight={highlight}
-          onSelect={onSelect}
-        />
-        <InvariantTree
-          truths={model.truths}
-          invariants={model.invariants}
-          label={L?.invariants ?? "Invariants"}
-          groupLabel={L?.truths ?? "truths"}
-          selected={selected}
-          highlight={highlight}
-          onSelect={onSelect}
-        />
-      </div>
+      )}
 
       <DetailPanel model={model} selected={selected} onClear={() => setSelected(null)} />
     </div>

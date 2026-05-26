@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Invariant, Truth } from "../types";
 import { invariantNodeId, truthNodeId } from "../types";
-import { genBadge, rowClass, specBadge } from "./util";
+import { genBadge, keyActivate, rowClass, specBadge } from "./util";
 
 interface Props {
   truths: Truth[];
@@ -61,8 +61,11 @@ export function InvariantTree({ truths, invariants, label, groupLabel, selected,
                     e.stopPropagation();
                     toggle(truth.name);
                   }}
+                  onKeyDown={keyActivate(() => toggle(truth.name))}
                   role="button"
-                  aria-label={open ? "collapse" : "expand"}
+                  tabIndex={0}
+                  aria-expanded={open}
+                  aria-label={`${open ? "collapse" : "expand"} ${truth.name}`}
                 >
                   ▶
                 </span>
@@ -71,6 +74,11 @@ export function InvariantTree({ truths, invariants, label, groupLabel, selected,
                   className="dstast-row-name"
                   style={{ cursor: "pointer" }}
                   onClick={() => onSelect(tid)}
+                  onKeyDown={keyActivate(() => onSelect(tid))}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={tid === selected}
+                  aria-label={`${groupLabel} ${truth.name}`}
                 >
                   {truth.name}
                 </span>
@@ -88,6 +96,8 @@ export function InvariantTree({ truths, invariants, label, groupLabel, selected,
                         key={id}
                         type="button"
                         className={rowClass(id === selected, dim)}
+                        aria-pressed={id === selected}
+                        aria-label={`invariant ${inv.id} ${inv.label}`}
                         onClick={() => onSelect(id)}
                       >
                         <div className="dstast-row-top">
