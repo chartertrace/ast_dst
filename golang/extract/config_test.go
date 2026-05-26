@@ -2,6 +2,7 @@ package extract
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -55,6 +56,52 @@ func TestTraceCallDrivesFaultEdges(t *testing.T) {
 		if e.Kind == EdgeOpInjectsFault {
 			t.Fatalf("expected no op-injects-fault edges, got %+v", e)
 		}
+	}
+}
+
+// TestValidateAcceptsGoodConfigs proves the validator passes the real configs
+// the tests and presets rely on, so it can't silently start rejecting valid use.
+func TestValidateAcceptsGoodConfigs(t *testing.T) {
+	t.Parallel()
+	if err := fixtureConfig().Validate(); err != nil {
+		t.Errorf("fixtureConfig should validate: %v", err)
+	}
+	// Recurse mode (no explicit packages) over an existing root.
+	rec := fixtureConfig()
+	rec.Packages = nil
+	if err := rec.Validate(); err != nil {
+		t.Errorf("recurse-mode config should validate: %v", err)
+	}
+}
+
+// TestValidateCatchesMisconfig covers each static check, since these are exactly
+// the cases that previously produced a silent empty section instead of an error.
+func TestValidateCatchesMisconfig(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name   string
+		mutate func(*Config)
+		want   string // substring expected in the error
+	}{
+		{"missing root", func(c *Config) { c.Root = "testdata/does-not-exist" }, "root"},
+		{"missing package", func(c *Config) { c.Packages = []string{"catalog", "nope"} }, `package "nope"`},
+		{"negative trace index", func(c *Config) { c.Operations.TraceArgIndex = -1 }, "traceArgIndex"},
+		{"cfg without specDir", func(c *Config) { c.TLA.SpecDir = ""; c.TLA.CfgFile = "X.cfg" }, "specDir"},
+		{"half-set weights", func(c *Config) { c.Operations.WeightsVar = "" }, "weights"},
+		{"slice without fields", func(c *Config) { c.Faults.IDField = "" }, "idField/labelField"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := fixtureConfig()
+			tc.mutate(&cfg)
+			err := cfg.Validate()
+			if err == nil {
+				t.Fatalf("expected an error for %s", tc.name)
+			}
+			if !strings.Contains(err.Error(), tc.want) {
+				t.Errorf("error %q should mention %q", err.Error(), tc.want)
+			}
+		})
 	}
 }
 

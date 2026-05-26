@@ -14,8 +14,8 @@ import (
 // grouped by truth, and the edges the source encodes. All names it looks for
 // come from cfg, so the same extractor serves any sim-shaped codebase.
 func Extract(cfg Config) (*Model, error) {
-	if cfg.Root == "" {
-		return nil, fmt.Errorf("config root is empty")
+	if err := cfg.Validate(); err != nil {
+		return nil, err
 	}
 	absRoot, err := filepath.Abs(cfg.Root)
 	if err != nil {

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 // Config describes where, in an arbitrary Go codebase, the four domain concepts
@@ -166,6 +168,83 @@ func LoadConfig(path string) (Config, error) {
 		return Config{}, fmt.Errorf("parse config %s: %w", path, err)
 	}
 	return cfg, nil
+}
+
+// Validate checks the static (non-AST) parts of a config up front, so a misconfig
+// fails with a precise message instead of silently producing an empty section.
+// It verifies the root and any explicitly listed packages exist and hold Go files,
+// numeric fields are in range, and dependent fields are set together. It does NOT
+// verify that the named vars/types/funcs exist in the source — those stay honest
+// gaps surfaced as stderr warnings (see cli.warnUnresolved), never hard errors, so
+// a partial config still runs.
+func (c Config) Validate() error {
+	var errs []string
+	add := func(format string, a ...any) { errs = append(errs, fmt.Sprintf(format, a...)) }
+
+	if c.Root == "" {
+		return fmt.Errorf("config root is empty")
+	}
+	if info, err := os.Stat(c.Root); err != nil {
+		add("root %q: %v", c.Root, err)
+	} else if !info.IsDir() {
+		add("root %q is not a directory", c.Root)
+	}
+
+	// Explicitly listed packages must exist and contain a non-test .go file.
+	// parseRoots otherwise drops a missing one silently and only fails if *every*
+	// package is empty, so a typo'd or moved package goes unnoticed.
+	for _, p := range c.Packages {
+		dir := p
+		if !filepath.IsAbs(dir) {
+			dir = filepath.Join(c.Root, dir)
+		}
+		switch hasGo, err := dirHasGoFiles(dir); {
+		case err != nil:
+			add("package %q: %v", p, err)
+		case !hasGo:
+			add("package %q has no Go files (paths are relative to root %q)", p, c.Root)
+		}
+	}
+
+	if c.Operations.TraceArgIndex < 0 {
+		add("operations.traceArgIndex must be >= 0, got %d", c.Operations.TraceArgIndex)
+	}
+	// Dependent-field coherence: a half-set pair silently yields nothing.
+	if c.TLA.CfgFile != "" && c.TLA.SpecDir == "" {
+		add("tla.cfgFile is set but tla.specDir is empty — the spec layer is disabled without specDir")
+	}
+	if (c.Operations.WeightsFunc == "") != (c.Operations.WeightsVar == "") {
+		add("operations.weightsFunc and operations.weightsVar must be set together")
+	}
+	if c.Faults.StructSliceVar != "" && (c.Faults.IDField == "" || c.Faults.LabelField == "") {
+		add("faults.structSliceVar is set but faults.idField/labelField are empty")
+	}
+	if c.Invariants.StructSliceVar != "" && (c.Invariants.IDField == "" || c.Invariants.LabelField == "") {
+		add("invariants.structSliceVar is set but invariants.idField/labelField are empty")
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("invalid config:\n  - %s", strings.Join(errs, "\n  - "))
+	}
+	return nil
+}
+
+// dirHasGoFiles reports whether dir contains a non-test .go file directly (the
+// same files parseDir would read).
+func dirHasGoFiles(dir string) (bool, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return false, err
+	}
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		if name := e.Name(); strings.HasSuffix(name, ".go") && !strings.HasSuffix(name, "_test.go") {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // handlerPrefix returns the prefix used to select operation handler functions.
