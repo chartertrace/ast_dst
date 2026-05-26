@@ -14,15 +14,15 @@
 // runs SANY/TLC). This produces the complementary piece: a TraceSpec that replays
 // an NDJSON DST trace against that spec.
 
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import type { DstModel } from "../types";
 import { generateTraceSpec } from "./trace";
 import { parseArgs } from "./args";
+import { loadModel, runCli } from "./cli-util";
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
-  const model = JSON.parse(readFileSync(resolve(args.in ?? "sample/model.json"), "utf8")) as DstModel;
+  const model = loadModel(args.in ?? "sample/model.json");
   const outDir = resolve(args.out ?? "tla-gen");
 
   const { module, cfg, moduleName } = generateTraceSpec(model, {
@@ -49,4 +49,4 @@ function main() {
   );
 }
 
-main();
+runCli(main);

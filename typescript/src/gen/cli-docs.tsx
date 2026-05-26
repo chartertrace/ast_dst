@@ -16,7 +16,6 @@ import {
   cpSync,
   existsSync,
   mkdirSync,
-  readFileSync,
   readdirSync,
   writeFileSync,
 } from "node:fs";
@@ -25,6 +24,7 @@ import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { DstModel } from "../types";
 import { parseArgs } from "./args";
+import { loadModel, runCli } from "./cli-util";
 import * as P from "../site/pages";
 import * as L from "../site/links";
 
@@ -44,12 +44,11 @@ function inlineJson(model: DstModel): string {
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
-  const inPath = resolve(args.in ?? "sample/model.json");
   const outDir = resolve(args.out ?? "site");
   const assetsDir = resolve(args.assets ?? "dist-viewer");
   const repoBase = args["repo-base"];
 
-  const model = JSON.parse(readFileSync(inPath, "utf8")) as DstModel;
+  const model = loadModel(args.in ?? "sample/model.json");
 
   // Viewer island is optional: if its build output is present, copy it in and
   // wire the overview to it; otherwise the overview shows a fallback note.
@@ -183,4 +182,4 @@ function main() {
   );
 }
 
-main();
+runCli(main);

@@ -10,15 +10,13 @@
 // Stage 1 of the trace-validation roadmap: the cheapest check that keeps the
 // spec and the implementation naming the same truths.
 
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-import type { DstModel } from "../types";
 import { hasBlockingDrift, reconcile } from "../model/reconcile";
 import { parseArgs } from "./args";
+import { loadModel, runCli } from "./cli-util";
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
-  const model = JSON.parse(readFileSync(resolve(args.in ?? "sample/model.json"), "utf8")) as DstModel;
+  const model = loadModel(args.in ?? "sample/model.json");
   const r = reconcile(model);
 
   const out: string[] = [];
@@ -68,4 +66,4 @@ function main() {
   }
 }
 
-main();
+runCli(main);
