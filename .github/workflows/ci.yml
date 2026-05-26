@@ -46,6 +46,13 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+      - name: cache tla2tools.jar
+        # Keyed on fetch-jar.sh, so the cache auto-invalidates when the pinned
+        # version/sha changes; otherwise the 4MB jar is reused across runs.
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ast_dst
+          key: tla2tools-${{ hashFiles('scripts/fetch-jar.sh') }}
       - name: fetch tla2tools.jar (pinned + checksum)
         run: echo "TLA2TOOLS_JAR=$(../scripts/fetch-jar.sh)" >> "$GITHUB_ENV"
       - name: gen integration tests (un-skipped)
